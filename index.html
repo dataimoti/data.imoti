@@ -1,3 +1,6 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Имотна статистика</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap&subset=cyrillic">
@@ -18,6 +21,7 @@
   --chip2: #e3e2dc;
   --dash: #c9c7bf;
   --s1: #2b6cdf;
+  --s1b: #9dbdf2;
   --s2: #cc650f;
   --focus: #2b6cdf;
   --font-ui: "Manrope", "Segoe UI", system-ui, sans-serif;
@@ -26,13 +30,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #121316; --rail: #121316; --surface: #1a1b1f; --ink: #ececee; --ink2: #a6abb3; --muted: #7b808a;
-    --line: #2d2f35; --line2: #24262b; --chip: #25272c; --chip2: #33363d; --dash: #43464e; --s1: #5a93f0; --s2: #d57a22; --focus: #5a93f0;
+    --line: #2d2f35; --line2: #24262b; --chip: #25272c; --chip2: #33363d; --dash: #43464e; --s1: #5a93f0; --s1b: #a9c6f8; --s2: #d57a22; --focus: #5a93f0;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #121316; --rail: #121316; --surface: #1a1b1f; --ink: #ececee; --ink2: #a6abb3; --muted: #7b808a;
-  --line: #2d2f35; --line2: #24262b; --chip: #25272c; --chip2: #33363d; --dash: #43464e; --s1: #5a93f0; --s2: #d57a22; --focus: #5a93f0;
+  --line: #2d2f35; --line2: #24262b; --chip: #25272c; --chip2: #33363d; --dash: #43464e; --s1: #5a93f0; --s1b: #a9c6f8; --s2: #d57a22; --focus: #5a93f0;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -135,6 +139,9 @@ td.first button { all: unset; cursor: pointer; }
 td.first button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 tbody tr:last-child td { border-bottom: 0; }
 .out { opacity: .42; }
+.srow .nm .desc { display: block; margin-top: 2px; font-size: 10px; color: var(--muted); }
+.srow .nm .desc i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin: 0 4px 0 6px; vertical-align: -0.5px; }
+.msg.card { margin: 8px 0; }
 
 .block { margin-bottom: 28px; }
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 20; background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 10px; font-size: 10.5px; }
@@ -173,39 +180,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 
   <main class="main">
     <div id="v-agency">
-     <!-- Всяка графика е в собствен .block. Следващите графики се добавят като нови .block един под друг. -->
-     <div class="block">
-      <h1 id="t-title"></h1>
-      <p class="sub" id="t-sub"></p>
-
-      <section class="card">
-        <div class="plot">
-          <div class="head">
-            <div class="titles">
-              <label class="sr" for="selOffice">Служба</label>
-              <span class="selwrap"><select id="selOffice" class="sel big"></select></span>
-            </div>
-            <div class="hright">
-              <div id="dlSlot"></div>
-              <div class="seg" role="group" aria-label="Изглед на графиките">
-                <button id="vOne" aria-pressed="true" title="Една графика с два показателя" aria-label="Една графика с два показателя"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/></svg></button>
-                <button id="vTwo" aria-pressed="false" title="Две графики една до друга, по един показател" aria-label="Две графики една до друга"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="3" width="5.5" height="10" rx="1.2"/><rect x="9" y="3" width="5.5" height="10" rx="1.2"/></svg></button>
-              </div>
-              <button class="info-btn" id="infoBtn" aria-expanded="false" aria-controls="pop" aria-label="Информация за данните">!</button>
-            </div>
-            <div class="pop" id="pop" role="dialog" aria-label="Информация за данните" hidden></div>
-          </div>
-          <div class="ctrl"><span class="period" id="t-range"></span><div class="presets" id="presets"></div></div>
-          <div class="charts" id="charts"></div>
-          <div class="rows" id="rows"></div>
-        </div>
-      </section>
-
-      <section class="card tablecard">
-        <div class="thead"><h2 id="t-table"></h2></div>
-        <div class="scroll" id="scroll"><table id="tbl"></table></div>
-      </section>
-     </div>
+     <!-- Всяка графика е блок, който се създава от описание в DEFS (в скрипта). -->
+     <div id="blocks"></div>
     </div>
 
     <div id="v-bnb" hidden><div class="card coming" id="c-bnb"></div></div>
@@ -216,101 +192,35 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
 <script src="config.js"></script>
 <script>
-/* ============ ТЕКСТОВЕ / TEXTS ============
-   Редактирай само текста между кавичките (bg = български, en = английски).
-   Не пипай имената отляво и кавичките. В реалния сайт този блок ще е в отделен файл. */
-const I18N = {
-  bg: {
-    pageTitle: "Имотна статистика",
-    navAgency: "Агенция по вписванията", navBnb: "БНБ", navContacts: "Контакти",
-    title: "Продажби на имоти",
-    sub: "Брой вписани продажби по тримесечия и промяна спрямо същото тримесечие на предходната година.",
-    seriesSales: "Продажби", unitSales: "брой",
-    seriesYoy: "Промяна спрямо същото тримесечие предходна година", unitYoy: "%",
-    yoyShort: "Промяна г/г (%)", yoyShortName: "Промяна г/г",
-    allCountry: "Цялата страна",
-    table: "Стойности по тримесечия", thIndicator: "Показател", quarter: "Тримесечие",
-    labBar: "Стълбове", labLine: "Линия",
-    tagOn: "Скрий числата върху графиката", tagOff: "Покажи числата върху графиката",
-    avgOn: "Скрий средната линия", avgOff: "Покажи средната линия за периода", avg: "Средно",
-    hide: "Скрий", show: "Покажи",
-    download: "Свали", dlPng: "Картинка (PNG)", dlXlsx: "Таблица (Excel)", dlCsv: "Таблица (CSV)", dlErr: "Свалянето не успя. Опитайте отново.",
-    themeToDark: "Тъмен режим", themeToLight: "Светъл режим", langTo: "English",
-    viewOne: "Една графика с два показателя", viewTwo: "Две графики една до друга, по един показател", viewGroup: "Изглед на графиките",
-    infoBtn: "Информация за данните", officeLabel: "Служба",
-    chartPair: "Графика на продажбите и годишната промяна по тримесечия", chartOne: "Графика: ",
-    p1: "1 г.", p5: "5 г.", p10: "10 г.", pAll: "Всички",
-    loading: "Зареждане на данните от базата…", errTitle: "Данните не могат да се заредят от базата.", errNoCfg: "Липсва връзка със Supabase: попълнете supabaseUrl и anonKey във файла config.js.",
-    infoTitle: "За данните",
-    info: [
-      ["Какво показва", "Броят на вписаните продажби на недвижими имоти във всяка служба по вписванията, по тримесечия, и колко е това повече или по-малко от същото тримесечие година по-рано."],
-      ["Как се изчислява промяната", "(Продажби в тримесечието − продажби в същото тримесечие предходната година) ÷ продажби в същото тримесечие предходната година × 100. Сравняваме Q3 с Q3, а не с предишното тримесечие, за да не влияе сезонността."],
-      ["Източник", "Агенция по вписванията, отчети за вписванията по служби."],
-      ["Ограничения", "Отчетът не дава разбивка по вид имот и не е уточнено дали обхваща всички видове имоти, затова числата не са само за жилища."]
-    ],
-    sourceUrl: "https://www.registryagency.bg/bg/registri/imoten-registar/statistika/",
-    sourceLabel: "Страница със статистиката",
-    comingSoon: "Този раздел предстои."
-  },
-  en: {
-    pageTitle: "Property statistics",
-    navAgency: "Registry Agency", navBnb: "BNB", navContacts: "Contacts",
-    title: "Property sales",
-    sub: "Number of registered sales by quarter and the change versus the same quarter of the previous year.",
-    seriesSales: "Sales", unitSales: "count",
-    seriesYoy: "Change vs. the same quarter of the previous year", unitYoy: "%",
-    yoyShort: "YoY change (%)", yoyShortName: "YoY change",
-    allCountry: "All Bulgaria",
-    table: "Values by quarter", thIndicator: "Indicator", quarter: "Quarter",
-    labBar: "Bars", labLine: "Line",
-    tagOn: "Hide values on the chart", tagOff: "Show values on the chart",
-    avgOn: "Hide the average line", avgOff: "Show the average line for the period", avg: "Avg",
-    hide: "Hide", show: "Show",
-    download: "Download", dlPng: "Image (PNG)", dlXlsx: "Table (Excel)", dlCsv: "Table (CSV)", dlErr: "Download failed. Please try again.",
-    themeToDark: "Dark mode", themeToLight: "Light mode", langTo: "Български",
-    viewOne: "One chart with two indicators", viewTwo: "Two charts side by side, one indicator each", viewGroup: "Chart layout",
-    infoBtn: "About the data", officeLabel: "Registry office",
-    chartPair: "Chart of sales and year-over-year change by quarter", chartOne: "Chart: ",
-    p1: "1 y", p5: "5 y", p10: "10 y", pAll: "All",
-    loading: "Loading data from the database…", errTitle: "The data could not be loaded from the database.", errNoCfg: "No Supabase connection: fill in supabaseUrl and anonKey in config.js.",
-    infoTitle: "About the data",
-    info: [
-      ["What it shows", "The number of registered real-estate sales in each registry office, by quarter, and how much higher or lower that is than the same quarter a year earlier."],
-      ["How the change is calculated", "(Sales in the quarter − sales in the same quarter of the previous year) ÷ sales in the same quarter of the previous year × 100. We compare Q3 with Q3, not with the previous quarter, so seasonality does not distort the result."],
-      ["Source", "Registry Agency (Bulgaria), registrations reports by office."],
-      ["Limitations", "The report has no breakdown by property type, so the numbers are not residential-only."]
-    ],
-    sourceUrl: "https://www.registryagency.bg/bg/registri/imoten-registar/statistika/",
-    sourceLabel: "Statistics page (in Bulgarian)",
-    comingSoon: "This section is coming soon."
-  }
-};
-/* ============ ДАННИ (в реалния сайт идват от Supabase) ============ */
 /* ============ ВРЪЗКА СЪС SUPABASE ============
-   URL и публичният ключ са във файла config.js (до index.html), не тук.
-   Сайтът ТЕГЛИ данните само от базата; в самия код няма вградени данни. */
+   URL и публичният ключ са във файла config.js (до index.html). Сайтът ТЕГЛИ данните само от базата.
+   Текстовете са в папка texts/ (bg.md и en.md) и се редактират като обикновен текст. */
 const CONFIG = Object.assign({
-  supabaseUrl: "", anonKey: "",
-  table: "vpisvania",
-  cols: { office: "Служба по вписванията", sales: "Продажби", year: "Година", quarter: "Тримесечие" }
+  supabaseUrl: "", anonKey: "", table: "vpisvania",
+  cols: { office: "Служба по вписванията", sales: "Продажби", legal: "Законни ипотеки", contract: "Договорни ипотеки", year: "Година", quarter: "Тримесечие" }
 }, window.APP_CONFIG || {});
+const FIELDS = ["sales", "legal", "contract"];
+
 /* превръща редовете от таблицата във вида, който ползва страницата */
 function buildData(rows) {
   const c = CONFIG.cols, qs = new Set(), by = {};
-  rows.forEach((r) => { const name = String(r[c.office]).replace(/^(?:СВ|\uFFFD+В)\s*-\s*/, "").trim(), q = r[c.year] * 10 + Number(r[c.quarter]); qs.add(q); (by[name] = by[name] || {})[q] = r[c.sales]; });
-  /* имена с повредени букви (�) се слепват с правилното име на същата служба */
-  const good = Object.keys(by).filter((n) => !n.includes("\uFFFD"));
-  Object.keys(by).filter((n) => n.includes("\uFFFD")).forEach((bad) => {
-    const re = new RegExp("^" + bad.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\uFFFD+/g, ".{1,4}") + "$"), hit = good.filter((g) => re.test(g));
-    if (hit.length === 1) { for (const q in by[bad]) if (by[hit[0]][q] == null) by[hit[0]][q] = by[bad][q]; delete by[bad]; }
-    else { console.warn("Повредено име на служба:", bad); }
+  rows.forEach((r) => {
+    const name = String(r[c.office]).replace(/^(?:СВ|�+В)\s*-\s*/, "").trim(), q = r[c.year] * 10 + Number(r[c.quarter]); qs.add(q);
+    const o = (by[name] = by[name] || {}); FIELDS.forEach((f) => { (o[f] = o[f] || {})[q] = r[c[f]]; });
   });
-  const keys = [...qs].sort((a, b) => a - b), o = {};
-  Object.keys(by).forEach((n) => { o[n] = keys.map((k) => (by[n][k] == null ? null : Number(by[n][k]))); });
-  return { q: keys.map((k) => Math.floor(k / 10) + " Q" + (k % 10)), o };
+  /* имена с повредени букви (�) се слепват с правилното име на същата служба */
+  const good = Object.keys(by).filter((n) => !n.includes("�"));
+  Object.keys(by).filter((n) => n.includes("�")).forEach((bad) => {
+    const re = new RegExp("^" + bad.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/�+/g, ".{1,4}") + "$"), hit = good.filter((g) => re.test(g));
+    if (hit.length === 1) { FIELDS.forEach((f) => { for (const q in by[bad][f]) if (by[hit[0]][f][q] == null) by[hit[0]][f][q] = by[bad][f][q]; }); delete by[bad]; }
+    else console.warn("Повредено име на служба:", bad);
+  });
+  const keys = [...qs].sort((a, b) => a - b), f = {};
+  FIELDS.forEach((fl) => { f[fl] = {}; Object.keys(by).forEach((n) => { f[fl][n] = keys.map((k) => (by[n][fl][k] == null || by[n][fl][k] === "" ? null : Number(by[n][fl][k]))); }); });
+  return { q: keys.map((k) => Math.floor(k / 10) + " Q" + (k % 10)), f };
 }
 async function loadFromSupabase() {
-  const c = CONFIG.cols, sel = encodeURIComponent('id,"' + c.office + '","' + c.sales + '","' + c.year + '","' + c.quarter + '"');
+  const c = CONFIG.cols, sel = encodeURIComponent("id," + ["office", "sales", "legal", "contract", "year", "quarter"].map((k) => '"' + c[k] + '"').join(","));
   const base = CONFIG.supabaseUrl.replace(/\/$/, "") + "/rest/v1/" + CONFIG.table + "?select=" + sel + "&order=id", rows = [];
   for (let off = 0; ; off += 1000) {
     const res = await fetch(base + "&limit=1000&offset=" + off, { headers: { apikey: CONFIG.anonKey, Authorization: "Bearer " + CONFIG.anonKey } });
@@ -320,123 +230,61 @@ async function loadFromSupabase() {
   if (!rows.length) throw new Error("0 rows (RLS / table name?)");
   return buildData(rows);
 }
-const ICONS = { agency: "data:image/png;base64,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", bnb: "data:image/png;base64,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", mail: "data:image/png;base64,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" };
 
-let LANG = "bg"; try { const s = localStorage.getItem("lang"); if (s === "en" || s === "bg") LANG = s; } catch (e) {}
-let T = I18N[LANG];
+/* ============ ТЕКСТОВЕ (texts/bg.md, texts/en.md) ============ */
+function parseTexts(txt) {
+  const o = {};
+  txt.split(/\r?\n/).forEach((l) => { if (!l.trim() || /^\s*#/.test(l)) return; const i = l.indexOf(":"); if (i > 0) o[l.slice(0, i).trim()] = l.slice(i + 1).trim(); });
+  return o;
+}
+async function loadTexts() {
+  const get = async (l) => { const r = await fetch("texts/" + l + ".md", { cache: "no-cache" }); if (!r.ok) throw new Error("texts/" + l + ".md: " + r.status); return parseTexts(await r.text()); };
+  const [bg, en] = await Promise.all([get("bg"), get("en")]);
+  return { bg, en };
+}
+const wrapT = (o) => new Proxy(o, { get: (t, k) => (typeof k !== "string" ? t[k] : k in t ? t[k] : "[" + k + "]") });
+let TEXTS = null, LANG = "bg"; try { const s = localStorage.getItem("lang"); if (s === "en" || s === "bg") LANG = s; } catch (e) {}
+let T = wrapT({});
+const setT = () => { T = wrapT(TEXTS[LANG]); };
+
+const ICONS = { agency: "data:image/png;base64,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", bnb: "data:image/png;base64,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", mail: "data:image/png;base64,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" };
 const FLAG_BG = '<svg width="26" height="17" viewBox="0 0 18 12" aria-hidden="true"><rect width="18" height="4" fill="#fff"/><rect y="4" width="18" height="4" fill="#00966e"/><rect y="8" width="18" height="4" fill="#d62612"/><rect width="18" height="12" fill="none" stroke="rgba(0,0,0,.25)"/></svg>';
 const FLAG_EN = '<svg width="26" height="17" viewBox="0 0 60 30" preserveAspectRatio="none" aria-hidden="true"><rect width="60" height="30" fill="#012169"/><path d="M0 0 60 30M60 0 0 30" stroke="#fff" stroke-width="6"/><path d="M0 0 60 30M60 0 0 30" stroke="#c8102e" stroke-width="2"/><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"/><path d="M30 0v30M0 15h60" stroke="#c8102e" stroke-width="6"/></svg>';
 const isDark = () => { const t = document.documentElement.getAttribute("data-theme"); return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; };
-let D = { q: [], o: {} }, Q = D.q, N = 0, DATA_OK = false;
+
+let D = { q: [], f: {} }, Q = D.q, N = 0, DATA_OK = false, LOADMSG = "", blocks = [];
 const ALL = "__all";
 const $ = (id) => document.getElementById(id);
-const S = { office: "София", from: 0, to: 0, split: false, kind: { sales: "bar", yoy: "bar" }, hide: { sales: false, yoy: false }, lab: { sales: true, yoy: true }, avg: { sales: false, yoy: false } };
-let cur = null, charts = [];
-
-const fmt = (v) => (v == null ? "–" : String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, LANG === "en" ? "," : " "));
-const pct = (v) => (v == null ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1).replace(".", LANG === "en" ? "." : ",") + " %");
+const fmt = (v) => (v == null ? "–" : String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, LANG === "en" ? "," : " "));
+const pctS = (v) => (v == null ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1).replace(".", LANG === "en" ? "." : ",") + " %");
+const pctU = (v) => (v == null ? "–" : v.toFixed(1).replace(".", LANG === "en" ? "." : ",") + " %");
+const FV = { num: fmt, pct: pctS, pctu: pctU };
 const TR = { а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ж: "zh", з: "z", и: "i", й: "y", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "h", ц: "ts", ч: "ch", ш: "sh", щ: "sht", ъ: "a", ь: "y", ю: "yu", я: "ya" };
 function translit(s) {
   s = s.replace(/ия(?=$|[\s-])/g, "ia").replace(/ИЯ(?=$|[\s-])/g, "Ia");
   return s.replace(/[а-яА-Я]/g, (ch) => { const l = TR[ch.toLowerCase()]; return ch === ch.toLowerCase() ? l : l[0].toUpperCase() + l.slice(1); });
 }
 const oName = (n) => (n === ALL ? T.allCountry : LANG === "en" ? translit(n) : n);
-
-function compute(office) {
-  let s;
-  if (office === ALL) {
-    s = Q.map((_, i) => { let t = 0, any = false; for (const k in D.o) { const v = D.o[k][i]; if (v != null) { t += v; any = true; } } return any ? t : null; });
-  } else s = D.o[office];
-  const y = s.map((v, i) => (i < 4 || v == null || s[i - 4] == null || s[i - 4] === 0 ? null : Math.round(1000 * (v - s[i - 4]) / s[i - 4]) / 10));
-  return { s, y };
-}
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const META = { sales: { short: () => T.seriesSales, name: () => T.seriesSales, unit: () => T.unitSales, col: "--s1" }, yoy: { short: () => T.yoyShortName, name: () => T.seriesYoy, unit: () => T.unitYoy, col: "--s2" } };
-
-/* ---------- текстове ---------- */
-function paintText() {
-  document.documentElement.lang = LANG; document.title = T.pageTitle;
-  document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = T[el.dataset.i18n]));
-  $("t-title").textContent = T.title; $("t-sub").textContent = T.sub; $("t-table").textContent = T.table;
-  $("c-bnb").textContent = T.navBnb + ". " + T.comingSoon; $("c-contacts").textContent = T.navContacts + ". " + T.comingSoon;
-  $("vOne").title = $("vOne").ariaLabel = T.viewOne; $("vTwo").title = $("vTwo").ariaLabel = T.viewTwo;
-  $("vOne").parentNode.setAttribute("aria-label", T.viewGroup);
-  $("infoBtn").setAttribute("aria-label", T.infoBtn); $("pop").setAttribute("aria-label", T.infoBtn);
-  $("selOffice").setAttribute("aria-label", T.officeLabel);
-  const pop = $("pop"); pop.textContent = "";
-  const h3 = document.createElement("h3"); h3.textContent = T.infoTitle; pop.append(h3);
-  T.info.forEach(([h, x]) => { const a = document.createElement("h4"); a.textContent = h; const p = document.createElement("p"); p.textContent = x; pop.append(a, p); });
-  const a = document.createElement("a"); a.href = T.sourceUrl; a.target = "_blank"; a.rel = "noopener"; a.textContent = T.sourceLabel;
-  const p = document.createElement("p"); p.style.marginTop = "10px"; p.append(a); pop.append(p);
-  document.querySelectorAll(".ic").forEach((el) => el.style.setProperty("--m", 'url("' + ICONS[el.dataset.icon] + '")'));
-  const lb = $("langBtn"); lb.innerHTML = LANG === "bg" ? FLAG_EN : FLAG_BG; lb.title = lb.ariaLabel = T.langTo;
-  const tb = $("themeBtn"); tb.title = tb.ariaLabel = isDark() ? T.themeToLight : T.themeToDark;
-}
-
-/* ---------- филтри ---------- */
-function fit(sel) {
-  const o = sel.options[sel.selectedIndex]; if (!o) return;
-  const cs = getComputedStyle(sel), c = fit.c || (fit.c = document.createElement("canvas").getContext("2d"));
-  c.font = cs.fontStyle + " " + cs.fontWeight + " " + cs.fontSize + " " + cs.fontFamily;
-  sel.style.width = Math.ceil(c.measureText(o.text).width + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + 16) + "px";
-}
-function fillSelects() {
-  const so = $("selOffice"); so.innerHTML = "";
-  so.add(new Option(T.allCountry, ALL));
-  const top4 = ["София", "Пловдив", "Варна", "Бургас"];
-  const rest = Object.keys(D.o).filter((n) => !top4.includes(n)).sort((a, b) => oName(a).localeCompare(oName(b), LANG));
-  [...top4, ...rest].forEach((n) => D.o[n] && so.add(new Option(oName(n), n)));
-  so.value = S.office; fit(so);
-  const pr = $("presets"); pr.innerHTML = "";
-  [[T.p1, 4], [T.p5, 20], [T.p10, 40], [T.pAll, N]].forEach(([tx, n]) => {
-    const b = document.createElement("button"); b.className = "chip"; b.textContent = tx; b.dataset.n = n; b.setAttribute("aria-pressed", "false");
-    b.onclick = () => setWindow(Math.max(0, N - n), N - 1, true); pr.append(b);
-  });
-}
-function syncControls() {
-  document.querySelectorAll("#presets .chip").forEach((c) => c.setAttribute("aria-pressed", String(S.to === N - 1 && S.to - S.from + 1 === Math.min(N, +c.dataset.n))));
-  $("t-range").textContent = Q[S.from] + " – " + Q[S.to];
-  document.querySelectorAll("[data-col]").forEach((el) => el.classList.toggle("out", +el.dataset.col < S.from || +el.dataset.col > S.to));
-}
-function setWindow(i, j, push, origin) {
-  if (i > j) [i, j] = [j, i];
-  S.from = Math.max(0, i); S.to = Math.min(N - 1, j);
-  syncControls();
-  charts.forEach((c) => {
-    refresh(c);
-    if (c !== origin) c.inst.dispatchAction({ type: "dataZoom", dataZoomIndex: 0, startValue: S.from, endValue: S.to });
-  });
-}
-
-/* ---------- оси: нулата е на една и съща линия за двете оси ---------- */
 const niceStep = (x) => { if (!(x > 0)) return 1; const p = Math.pow(10, Math.floor(Math.log10(x))); for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= x - 1e-9) return m * p; return 10 * p; };
-function extent() {
-  const { s, y } = cur; let maxS = 0, maxY = 0, minY = 0;
-  for (let i = S.from; i <= S.to; i++) { if (s[i] != null) maxS = Math.max(maxS, s[i]); if (y[i] != null) { maxY = Math.max(maxY, y[i]); minY = Math.min(minY, y[i]); } }
-  return { maxS, maxY, minY };
-}
-/* ex = 1 добавя едно деление място за наклонените числа над/под стълбовете */
-function axesFor(c) {
-  const { maxS, maxY, minY } = extent(), m = lblMode(c), ex = m.show ? (m.maxRows >= 3 ? 2 : m.maxRows > 1 ? 1 : 0) : 0, ids = c.ids;
-  if (ids.length === 2) {
-    const iL = niceStep(maxS / 5), nPos = Math.max(1, Math.ceil(maxS / iL - 1e-9)), negY = -minY;
-    const iR = niceStep(Math.max(maxY / nPos, negY / 3, 1)), nNeg = negY > 0 ? Math.ceil(negY / iR - 1e-9) + ex : 0;
-    return [{ min: -nNeg * iL, max: (nPos + ex) * iL, interval: iL }, { min: -nNeg * iR, max: (nPos + ex) * iR, interval: iR }];
-  }
-  if (ids[0] === "sales") { const st = niceStep(maxS / 5); return [{ min: 0, max: (Math.max(1, Math.ceil(maxS / st - 1e-9)) + ex) * st, interval: st }]; }
-  const st = niceStep(Math.max(maxY - minY, 1) / 6);
-  return [{ min: (Math.floor(minY / st + 1e-9) - (minY < 0 ? ex : 0)) * st, max: (Math.max(1, Math.ceil(maxY / st - 1e-9)) + ex) * st, interval: st }];
-}
-/* числата върху графиката: до 40 тримесечия (10 г.), винаги хоризонтални; при гъст период са по-дребни и без „%“ */
-function lblMode(c) {
-  const n = S.to - S.from + 1, pair = c.ids.length === 2, w = c.el.clientWidth || 800;
-  const dense = n > 20, fs = n > 28 ? 8 : n > 20 ? 8.5 : 9, pitch = (w - (pair ? 114 : 72)) / n, rows = {};
-  c.ids.forEach((id) => { const chars = id === "sales" ? 6 : dense ? 5 : 7; rows[id] = Math.min(3, Math.max(1, Math.ceil((chars * 0.6 * fs + 4) / pitch))); });
-  return { show: n <= 40, rot: false, dense, fs, rows, maxRows: Math.max(...Object.values(rows)) };
-}
+const gridOf = (pair) => ({ left: pair ? 52 : 56, right: pair ? 62 : 16, top: pair ? 16 : 44, bottom: 58 });
+const sumF = (F, k) => Q.map((_, i) => { let t = 0, any = false; for (const n in F[k]) { const v = F[k][n][i]; if (v != null) { t += v; any = true; } } return any ? t : null; });
+const fieldsOf = (office) => (office === ALL ? { sales: sumF(D.f, "sales"), legal: sumF(D.f, "legal"), con: sumF(D.f, "contract") } : { sales: D.f.sales[office], legal: D.f.legal[office], con: D.f.contract[office] });
 
-/* ---------- икони и редове под графиката ---------- */
+/* ============ ОПИСАНИЕ НА ГРАФИКИТЕ ============
+   Нова графика = ново описание тук (series: какво се рисува; rows: редовете на таблицата; calc: как се смятат стойностите). */
+const DEFS = [
+  { key: "s", file: "prodazhbi", vt: { sales: "num", yoy: "pct" },
+    series: [{ id: "sales", col: "--s1", axis: 0, exp: ["sales"] }, { id: "yoy", col: "--s2", axis: 1, exp: ["yoy"] }],
+    rows: [{ id: "sales", tog: "sales", col: "--s1" }, { id: "yoy", tog: "yoy", col: "--s2" }],
+    calc: (F) => ({ sales: F.sales, yoy: F.sales.map((v, i) => (i < 4 || v == null || F.sales[i - 4] == null || F.sales[i - 4] === 0 ? null : Math.round(1000 * (v - F.sales[i - 4]) / F.sales[i - 4]) / 10)) }) },
+  { key: "m", file: "ipoteki", vt: { mort: "num", leg: "num", con: "num", share: "pctu" },
+    series: [{ id: "mort", col: "--s1", axis: 0, parts: [["leg", "--s1b"], ["con", "--s1"]], exp: ["mort", "leg", "con"] }, { id: "share", col: "--s2", axis: 1, exp: ["share"] }],
+    rows: [{ id: "share", tog: "share", col: "--s2" }, { id: "mort", tog: "mort", col: "--s1" }, { id: "leg", col: "--s1b" }, { id: "con", col: "--s1" }],
+    calc: (F) => { const mort = F.legal.map((v, i) => (v == null || F.con[i] == null ? null : v + F.con[i])); return { mort, leg: F.legal, con: F.con, share: mort.map((v, i) => (v == null || F.sales[i] == null || F.sales[i] === 0 ? null : Math.round(1000 * v / F.sales[i]) / 10)) }; } }
+];
+
 const ICON = {
   bar: '<svg viewBox="0 0 16 16" fill="currentColor"><rect x="1.5" y="8" width="3" height="6.5" rx=".6"/><rect x="6.5" y="3" width="3" height="11.5" rx=".6"/><rect x="11.5" y="6" width="3" height="8.5" rx=".6"/></svg>',
   line: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,11.5 5.5,6.5 9.5,9.5 14.5,3.5"/><circle cx="5.5" cy="6.5" r="1.2" fill="currentColor"/><circle cx="9.5" cy="9.5" r="1.2" fill="currentColor"/></svg>',
@@ -446,152 +294,360 @@ const ICON = {
   dl: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4.8 7.2 8 10.4l3.2-3.2M2.5 10v3.5h11V10"/></svg>',
   eyeoff: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2l12 12M6.2 4c.6-.3 1.1-.5 1.8-.5 4.5 0 7 4.5 7 4.5s-.8 1.4-2.2 2.6M3.8 5.6C2.2 6.8 1 8 1 8s2.5 4.5 7 4.5c.9 0 1.7-.2 2.4-.5"/></svg>'
 };
-function buildRows() {
-  const wrap = $("rows"); wrap.innerHTML = "";
-  ["sales", "yoy"].forEach((k) => {
-    const name = META[k].name(), r = document.createElement("div"); r.className = "srow";
-    r.innerHTML = '<span class="dot" style="background:var(' + META[k].col + ')"></span><span class="nm"></span><div class="tools"></div>';
-    const nm = r.querySelector(".nm"); nm.append(name); const sm = document.createElement("small"); sm.textContent = "(" + META[k].unit() + ")"; nm.append(sm);
-    const tools = r.querySelector(".tools");
-    const add = (icon, title, pressed, fn) => { const b = document.createElement("button"); b.className = "tool"; b.innerHTML = icon; b.title = title; b.setAttribute("aria-label", name + ": " + title); b.setAttribute("aria-pressed", String(pressed)); b.onclick = fn; tools.append(b); };
-    add(ICON.bar, T.labBar, S.kind[k] === "bar", () => { S.kind[k] = "bar"; buildRows(); render(); });
-    add(ICON.line, T.labLine, S.kind[k] === "line", () => { S.kind[k] = "line"; buildRows(); render(); });
-    add(ICON.tag, S.lab[k] ? T.tagOn : T.tagOff, S.lab[k], () => { S.lab[k] = !S.lab[k]; buildRows(); charts.forEach(refresh); });
-    add(ICON.avg, S.avg[k] ? T.avgOn : T.avgOff, S.avg[k], () => { S.avg[k] = !S.avg[k]; buildRows(); charts.forEach(refresh); });
-    add(S.hide[k] ? ICON.eyeoff : ICON.eye, S.hide[k] ? T.show : T.hide, S.hide[k], () => toggleHide(k));
-    wrap.append(r);
-  });
-}
-function toggleHide(k) { S.hide[k] = !S.hide[k]; buildRows(); buildTable(); render(); }
+const BLOCK_HTML = `
+  <h1 data-r="title"></h1>
+  <p class="sub" data-r="sub"></p>
+  <section class="card"><div class="plot">
+    <div class="head">
+      <div class="titles"><label class="sr" data-r="officeLbl"></label><span class="selwrap"><select data-r="office" class="sel big"></select></span></div>
+      <div class="hright">
+        <div data-r="dlSlot"></div>
+        <div class="seg" role="group" data-r="seg">
+          <button data-r="vOne" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/></svg></button>
+          <button data-r="vTwo" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="3" width="5.5" height="10" rx="1.2"/><rect x="9" y="3" width="5.5" height="10" rx="1.2"/></svg></button>
+        </div>
+        <button class="info-btn" data-r="infoBtn" aria-expanded="false">!</button>
+      </div>
+      <div class="pop" data-r="pop" role="dialog" hidden></div>
+    </div>
+    <div class="ctrl"><span class="period" data-r="range"></span><div class="presets" data-r="presets"></div></div>
+    <div class="charts" data-r="charts"></div>
+    <div class="rows" data-r="rows"></div>
+  </div></section>
+  <section class="card tablecard"><div class="thead"><h2 data-r="tableTitle"></h2></div><div class="scroll"><table data-r="tbl"></table></div></section>`;
 
-/* ---------- графика ---------- */
-function avgOf(id) {
-  const arr = id === "sales" ? cur.s : cur.y; let sum = 0, cnt = 0;
-  for (let i = S.from; i <= S.to; i++) if (arr[i] != null) { sum += arr[i]; cnt++; }
-  return cnt ? sum / cnt : null;
-}
-const gridOf = (pair) => ({ left: pair ? 52 : 56, right: pair ? 62 : 16, top: pair ? 16 : 44, bottom: 58 });
-/* Подредба на числата без застъпване: за всяко число пробваме 4 височини над/под края на стълба
-   и вземаме първата, където не пада върху вече поставено число; ако няма място, числото се скрива. */
-function placeLabels(c, mode) {
-  const out = {}, pair = c.ids.length === 2, ax = axesFor(c), n = S.to - S.from + 1;
-  const w = c.el.clientWidth || 800, H = c.el.clientHeight || 392, g = gridOf(pair);
-  const pw = w - g.left - g.right, ph = H - g.top - g.bottom, pitch = pw / n, band = pitch * 0.72, fs = mode.fs, placed = [];
-  const bothBars = pair && S.kind.sales === "bar" && S.kind.yoy === "bar";
-  const bwS = Math.min(22, band / 2.3), bwY = Math.min(10, band / 2.3), tot = bwS + 0.3 * bwY + bwY;
-  c.ids.forEach((id) => {
-    const res = (out[id] = new Array(N)), a = ax[pair && id === "yoy" ? 1 : 0], arr = id === "sales" ? cur.s : cur.y;
-    if (!(mode.show && !S.hide[id] && S.lab[id])) return;
-    const off = bothBars ? (id === "sales" ? -tot / 2 + bwS / 2 : tot / 2 - bwY / 2) : 0;
-    for (let i = S.from; i <= S.to; i++) {
-      const v = arr[i]; if (v == null) continue;
-      const txt = id === "yoy" ? (mode.dense ? pct(v).replace(" %", "") : pct(v)) : fmt(v);
-      const wd = txt.length * 0.6 * fs + 3, cx = g.left + (i - S.from + 0.5) * pitch + off;
-      const yEnd = g.top + ((a.max - v) / (a.max - a.min)) * ph, neg = v < 0;
-      let ok = false;
-      for (let r = 0; r < 4 && !ok; r++) {
-        const dist = 5 + r * (fs + 3), y0 = neg ? yEnd + dist : yEnd - dist - fs - 1, box = { x0: cx - wd / 2, x1: cx + wd / 2, y0, y1: y0 + fs + 1 };
-        if (box.y0 < 2 || box.y1 > g.top + ph) continue;
-        if (placed.some((p) => p.x0 < box.x1 && p.x1 > box.x0 && p.y0 < box.y1 && p.y1 > box.y0)) continue;
-        placed.push(box); res[i] = { position: neg ? "bottom" : "top", distance: dist }; ok = true;
-      }
-      if (!ok) res[i] = { show: false };
-    }
-  });
-  return out;
-}
-function buildSeries(c) {
-  const { s, y } = cur, mode = lblMode(c), pair = c.ids.length === 2, lay = placeLabels(c, mode);
-  const surf = css("--surface"), ink = css("--ink"), muted = css("--muted");
-  const arrs = { sales: s, yoy: y };
-  return c.ids.map((id, k) => {
-    const color = css(META[id].col), kind = S.kind[id], hid = S.hide[id], axis = pair && id === "yoy" ? 1 : 0;
-    const rows = mode.rows[id];
-    const itemLab = (v, i) => (lay[id] && lay[id][i]) || { position: v != null && v < 0 ? "bottom" : "top", distance: 5 };
-    const data = arrs[id].map((v, i) => { const o = { value: v, label: itemLab(v, i) }; if (kind === "bar") o.itemStyle = { borderRadius: v != null && v < 0 ? [0, 0, 3, 3] : [3, 3, 0, 0] }; return o; });
-    const label = { show: mode.show && !hid && S.lab[id], position: "top", fontFamily: css("--font-num"), fontSize: mode.fs, fontWeight: 400, color: ink, formatter: (p) => (id === "yoy" ? (mode.dense ? pct(p.value).replace(" %", "") : pct(p.value)) : fmt(p.value)) };
-    const ml = [];
-    if (k === 0) ml.push({ yAxis: 0, lineStyle: { type: "solid", color: muted, width: 1 }, label: { show: false } });
-    if (S.avg[id] && !hid) {
-      const av = avgOf(id);
-      if (av != null) { ml.push({ yAxis: av, lineStyle: { type: "dashed", color, width: 1.6 }, label: { show: true, position: "insideStartTop", color: ink, fontSize: 9, fontWeight: 400, fontFamily: css("--font-num"), formatter: () => T.avg + ": " + (id === "yoy" ? pct(av) : fmt(av)) } }); }
-    }
-    const base = { id, name: META[id].name(), yAxisIndex: axis, silent: hid, animation: !reduce, emphasis: { disabled: hid }, label, data,
-      markLine: { silent: true, symbol: "none", animation: false, label: { show: false }, data: ml } };
-    if (kind === "bar") return { ...base, type: "bar", barMaxWidth: pair ? (id === "sales" ? 22 : 10) : 34, barCategoryGap: "28%", itemStyle: { color, opacity: hid ? 0 : 1 } };
-    return { ...base, type: "line", symbol: "circle", symbolSize: 6, showSymbol: true, connectNulls: false,
-      lineStyle: { width: 2, color, opacity: hid ? 0 : 1 }, itemStyle: { color, borderColor: surf, borderWidth: 1.5, opacity: hid ? 0 : 1 } };
-  });
-}
-function option(c) {
-  const ink2 = css("--ink2"), muted = css("--muted"), line = css("--line2"), surf = css("--surface"), ink = css("--ink"), c1 = css("--s1");
-  const ids = c.ids, pair = ids.length === 2, ax = axesFor(c);
-  const axBase = { type: "value", axisLabel: { color: muted, fontSize: 9 } };
-  const salesAx = (i, pos, split) => ({ ...axBase, ...ax[i], position: pos, axisLabel: { ...axBase.axisLabel, formatter: (v) => (v < 0 ? "" : fmt(v)) }, splitLine: { show: split, lineStyle: { color: line } } });
-  const yoyAx = (i, pos, split) => ({ ...axBase, ...ax[i], position: pos, axisLabel: { ...axBase.axisLabel, formatter: (v) => v + "%" }, splitLine: { show: split, lineStyle: { color: line } } });
-  const yAxis = pair ? [salesAx(0, "right", true), yoyAx(1, "left", false)] : ids[0] === "sales" ? [salesAx(0, "left", true)] : [yoyAx(0, "left", true)];
-  return {
-    animation: !reduce, animationDuration: 350, animationDurationUpdate: 200,
-    textStyle: { fontFamily: css("--font-ui") },
-    grid: gridOf(pair),
-    tooltip: { trigger: "axis", axisPointer: { type: "line", lineStyle: { color: muted, type: "dashed" } }, backgroundColor: surf, borderColor: css("--line"), borderWidth: 1,
-      textStyle: { color: ink, fontFamily: css("--font-ui"), fontSize: 12.5 }, extraCssText: "border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);",
-      formatter: (ps) => {
-        const head = '<div style="font-weight:700;margin-bottom:6px">' + ps[0].axisValue + "</div>";
-        const rows = ps.filter((p) => !S.hide[p.seriesId]).map((p) => '<div style="display:flex;align-items:center;gap:8px;justify-content:space-between;min-width:' + (pair ? 230 : 150) + 'px"><span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:' + p.color + ';margin-right:6px"></span>' + (pair ? p.seriesName : "") + '</span><b style="font-family:' + css("--font-num") + '">' + (p.seriesId === "yoy" ? pct(p.value) : fmt(p.value)) + "</b></div>").join("");
-        const avgRows = ids.filter((id) => S.avg[id] && !S.hide[id] && avgOf(id) != null).map((id) => { const av = avgOf(id); return '<div style="display:flex;align-items:center;gap:8px;justify-content:space-between;min-width:' + (pair ? 230 : 150) + 'px;color:' + ink2 + '"><span><span style="display:inline-block;width:18px;height:2px;background:repeating-linear-gradient(90deg,' + css(META[id].col) + ' 0 5px,transparent 5px 8px);margin-right:6px;vertical-align:middle"></span>' + T.avg + (pair ? " – " + META[id].short() : "") + '</span><b style="font-family:' + css("--font-num") + '">' + (id === "yoy" ? pct(av) : fmt(av)) + "</b></div>"; }).join("");
-        return head + rows + (avgRows ? '<div style="border-top:1px solid ' + css("--line") + ';margin:6px 0 4px"></div>' + avgRows : "");
-      } },
-    xAxis: { type: "category", data: Q, boundaryGap: true, axisLine: { onZero: false, lineStyle: { color: css("--line") } }, axisTick: { show: false }, axisLabel: { color: muted, fontSize: 9, hideOverlap: true } },
-    yAxis,
-    dataZoom: [
-      { type: "slider", xAxisIndex: 0, startValue: S.from, endValue: S.to, height: 20, bottom: 4, filterMode: "filter", brushSelect: false, showDataShadow: true,
-        borderColor: css("--line"), backgroundColor: "transparent", fillerColor: "rgba(90,147,240,.16)", dataBackground: { lineStyle: { color: muted, width: 1 }, areaStyle: { color: css("--chip") } },
-        selectedDataBackground: { lineStyle: { color: c1 }, areaStyle: { color: c1, opacity: .25 } }, handleSize: "120%", handleStyle: { color: surf, borderColor: ink2 },
-        textStyle: { color: ink2, fontSize: 9 }, moveHandleSize: 6, labelFormatter: (v, str) => str },
-      { type: "inside", xAxisIndex: 0, filterMode: "filter", zoomOnMouseWheel: "ctrl", moveOnMouseMove: true, moveOnMouseWheel: false }
-    ],
-    series: buildSeries(c)
-  };
-}
-function refresh(c) { c.inst.setOption({ yAxis: axesFor(c), series: buildSeries(c) }); }
-function render() { charts.forEach((c) => c.inst.setOption(option(c), true)); }
-const ro = new ResizeObserver(() => charts.forEach((c) => { c.inst.resize(); refresh(c); }));
-
-/* ---------- сваляне: точно това, което се вижда (без плъзгача) ---------- */
 const closeMenus = () => document.querySelectorAll(".dlmenu").forEach((m) => { m.hidden = true; m.previousElementSibling?.setAttribute("aria-expanded", "false"); });
+
+/* ============ БЛОК = една графика + таблицата под нея ============ */
+class Block {
+  constructor(def, host) {
+    this.def = def; this.p = def.key; this.charts = []; this.cur = null;
+    this.S = { office: "София", from: 0, to: 0, split: false, kind: {}, hide: {}, lab: {}, avg: {} };
+    def.series.forEach((s) => { this.S.kind[s.id] = "bar"; this.S.hide[s.id] = false; this.S.lab[s.id] = true; this.S.avg[s.id] = false; });
+    this.root = document.createElement("div"); this.root.className = "block"; this.root.innerHTML = BLOCK_HTML; host.append(this.root);
+    this.ro = new ResizeObserver(() => this.charts.forEach((c) => { c.inst.resize(); this.refresh(c); }));
+    const r = (this.r = (n) => this.root.querySelector('[data-r="' + n + '"]'));
+    r("vOne").onclick = () => { if (this.S.split) { this.S.split = false; this.mount(); } };
+    r("vTwo").onclick = () => { if (!this.S.split) { this.S.split = true; this.mount(); } };
+    r("office").onchange = (e) => { this.S.office = e.target.value; this.loadOffice(); };
+    r("infoBtn").onclick = (e) => { e.stopPropagation(); closeMenus(); blocks.forEach((b) => b !== this && b.togglePop(false)); this.togglePop(r("pop").hidden); };
+    this.nameOf = (id) => T[this.p + "." + id + ".name"]; this.shortOf = (id) => T[this.p + "." + id + ".short"];
+    this.unitOf = (id) => (this.def.vt[id] === "num" ? T.unitCount : "%");
+    this.sd = (id) => this.def.series.find((s) => s.id === id);
+  }
+  togglePop(open) { const pop = this.r("pop"); pop.hidden = !open; this.r("infoBtn").setAttribute("aria-expanded", String(open)); }
+  start() {
+    const S = this.S; S.from = Math.max(0, N - 40); S.to = N - 1;
+    if (!D.f.sales[S.office]) S.office = Object.keys(D.f.sales)[0];
+    this.cur = this.def.calc(fieldsOf(S.office));
+    this.paint(); this.fillSelects(); this.buildRows(); this.buildTable(); this.mount();
+  }
+  repaint() { this.paint(); this.fillSelects(); this.buildRows(); this.buildTable(); this.mount(); }
+
+  /* ---------- текстове ---------- */
+  paint() {
+    const r = this.r, p = this.p;
+    r("title").textContent = T[p + ".title"]; r("sub").textContent = T[p + ".sub"]; r("tableTitle").textContent = T[p + ".table"];
+    r("vOne").title = r("vOne").ariaLabel = T.viewOne; r("vTwo").title = r("vTwo").ariaLabel = T.viewTwo; r("seg").setAttribute("aria-label", T.viewGroup);
+    r("infoBtn").setAttribute("aria-label", T.infoBtn); r("pop").setAttribute("aria-label", T.infoBtn); r("office").setAttribute("aria-label", T.officeLabel); r("officeLbl").textContent = T.officeLabel;
+    const pop = r("pop"); pop.textContent = "";
+    const h3 = document.createElement("h3"); h3.textContent = T.infoTitle; pop.append(h3);
+    for (let i = 1; i < 9 && (p + ".info" + i + ".h") in TEXTS[LANG]; i++) { const a = document.createElement("h4"); a.textContent = T[p + ".info" + i + ".h"]; const q = document.createElement("p"); q.textContent = T[p + ".info" + i + ".p"]; pop.append(a, q); }
+    const a = document.createElement("a"); a.href = T.sourceUrl; a.target = "_blank"; a.rel = "noopener"; a.textContent = T.sourceLabel;
+    const q = document.createElement("p"); q.style.marginTop = "10px"; q.append(a); pop.append(q);
+  }
+  fit(sel) {
+    const o = sel.options[sel.selectedIndex]; if (!o) return;
+    const cs = getComputedStyle(sel), c = Block.cv || (Block.cv = document.createElement("canvas").getContext("2d"));
+    c.font = cs.fontStyle + " " + cs.fontWeight + " " + cs.fontSize + " " + cs.fontFamily;
+    sel.style.width = Math.ceil(c.measureText(o.text).width + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + 16) + "px";
+  }
+  fillSelects() {
+    const so = this.r("office"); so.innerHTML = ""; so.add(new Option(T.allCountry, ALL));
+    const top4 = ["София", "Пловдив", "Варна", "Бургас"], names = Object.keys(D.f.sales);
+    const rest = names.filter((n) => !top4.includes(n)).sort((a, b) => oName(a).localeCompare(oName(b), LANG));
+    [...top4, ...rest].forEach((n) => D.f.sales[n] && so.add(new Option(oName(n), n)));
+    so.value = this.S.office; this.fit(so);
+    const pr = this.r("presets"); pr.innerHTML = "";
+    [[T.p1, 4], [T.p5, 20], [T.p10, 40], [T.pAll, N]].forEach(([tx, n]) => {
+      const b = document.createElement("button"); b.className = "chip"; b.textContent = tx; b.dataset.n = n; b.setAttribute("aria-pressed", "false");
+      b.onclick = () => this.setWindow(Math.max(0, N - n), N - 1, true); pr.append(b);
+    });
+  }
+  syncControls() {
+    const S = this.S;
+    this.root.querySelectorAll(".presets .chip").forEach((c) => c.setAttribute("aria-pressed", String(S.to === N - 1 && S.to - S.from + 1 === Math.min(N, +c.dataset.n))));
+    this.r("range").textContent = Q[S.from] + " – " + Q[S.to];
+    this.root.querySelectorAll("[data-col]").forEach((el) => el.classList.toggle("out", +el.dataset.col < S.from || +el.dataset.col > S.to));
+  }
+  setWindow(i, j, push, origin) {
+    const S = this.S; if (i > j) [i, j] = [j, i];
+    S.from = Math.max(0, i); S.to = Math.min(N - 1, j);
+    this.syncControls();
+    this.charts.forEach((c) => { this.refresh(c); if (c !== origin) c.inst.dispatchAction({ type: "dataZoom", dataZoomIndex: 0, startValue: S.from, endValue: S.to }); });
+  }
+  loadOffice() { this.cur = this.def.calc(fieldsOf(this.S.office)); this.buildTable(); if (this.charts.length) this.render(); this.fit(this.r("office")); }
+
+  /* ---------- оси: нулата е на една и съща линия за двете оси ---------- */
+  extent(ids) {
+    const { S, cur } = this, [a, b] = this.def.series.map((s) => s.id); let maxS = 0, maxY = 0, minY = 0;
+    for (let i = S.from; i <= S.to; i++) {
+      if (ids.includes(a) && cur[a][i] != null) maxS = Math.max(maxS, cur[a][i]);
+      if (ids.includes(b) && cur[b][i] != null) { maxY = Math.max(maxY, cur[b][i]); minY = Math.min(minY, cur[b][i]); }
+    }
+    return { maxS, maxY, minY };
+  }
+  axesFor(c) {
+    const { maxS, maxY, minY } = this.extent(c.ids), m = this.lblMode(c), ex = m.show ? (m.maxRows >= 3 ? 2 : m.maxRows > 1 ? 1 : 0) : 0, ids = c.ids;
+    if (ids.length === 2) {
+      const iL = niceStep(maxS / 5), nPos = Math.max(1, Math.ceil(maxS / iL - 1e-9)), negY = -minY;
+      const iR = niceStep(Math.max(maxY / nPos, negY / 3, 1)), nNeg = negY > 0 ? Math.ceil(negY / iR - 1e-9) + ex : 0;
+      return [{ min: -nNeg * iL, max: (nPos + ex) * iL, interval: iL }, { min: -nNeg * iR, max: (nPos + ex) * iR, interval: iR }];
+    }
+    if (this.sd(ids[0]).axis === 0) { const st = niceStep(maxS / 5); return [{ min: 0, max: (Math.max(1, Math.ceil(maxS / st - 1e-9)) + ex) * st, interval: st }]; }
+    const st = niceStep(Math.max(maxY - minY, 1) / 6);
+    return [{ min: (Math.floor(minY / st + 1e-9) - (minY < 0 ? ex : 0)) * st, max: (Math.max(1, Math.ceil(maxY / st - 1e-9)) + ex) * st, interval: st }];
+  }
+  /* числата върху графиката: до 40 тримесечия (10 г.), винаги хоризонтални; при гъст период са по-дребни и без „%“ */
+  lblMode(c) {
+    const S = this.S, n = S.to - S.from + 1, pair = c.ids.length === 2, w = c.el.clientWidth || 800;
+    const dense = n > 20, fs = n > 28 ? 8 : n > 20 ? 8.5 : 9, pitch = (w - (pair ? 114 : 72)) / n, rows = {};
+    c.ids.forEach((id) => { const chars = this.def.vt[id] === "num" ? 6 : dense ? 5 : 7; rows[id] = Math.min(3, Math.max(1, Math.ceil((chars * 0.6 * fs + 4) / pitch))); });
+    return { show: n <= 40, rot: false, dense, fs, rows, maxRows: Math.max(...Object.values(rows)) };
+  }
+  lblText(id, v, mode) { const t = this.def.vt[id]; return t === "num" ? fmt(v) : mode.dense ? FV[t](v).replace(" %", "") : FV[t](v); }
+
+  /* ---------- редове под графиката ---------- */
+  buildRows() {
+    const wrap = this.r("rows"), S = this.S; wrap.innerHTML = "";
+    this.def.series.forEach((sd) => {
+      const k = sd.id, name = this.nameOf(k), r = document.createElement("div"); r.className = "srow";
+      r.innerHTML = '<span class="dot" style="background:var(' + sd.col + ')"></span><span class="nm"></span><div class="tools"></div>';
+      const nm = r.querySelector(".nm"); nm.append(name); const sm = document.createElement("small"); sm.textContent = "(" + this.unitOf(k) + ")"; nm.append(sm);
+      if (sd.parts) {
+        const d = document.createElement("span"); d.className = "desc";
+        d.append(T[this.p + "." + k + ".desc"] + " ");
+        sd.parts.slice().reverse().forEach(([pid, col]) => { const i = document.createElement("i"); i.style.background = "var(" + col + ")"; d.append(i, this.nameOf(pid) + "  "); });
+        nm.append(d);
+      }
+      const tools = r.querySelector(".tools");
+      const add = (icon, title, pressed, fn) => { const b = document.createElement("button"); b.className = "tool"; b.innerHTML = icon; b.title = title; b.setAttribute("aria-label", name + ": " + title); b.setAttribute("aria-pressed", String(pressed)); b.onclick = fn; tools.append(b); };
+      add(ICON.bar, T.labBar, S.kind[k] === "bar", () => { S.kind[k] = "bar"; this.buildRows(); this.render(); });
+      add(ICON.line, T.labLine, S.kind[k] === "line", () => { S.kind[k] = "line"; this.buildRows(); this.render(); });
+      add(ICON.tag, S.lab[k] ? T.tagOn : T.tagOff, S.lab[k], () => { S.lab[k] = !S.lab[k]; this.buildRows(); this.charts.forEach((c) => this.refresh(c)); });
+      add(ICON.avg, S.avg[k] ? T.avgOn : T.avgOff, S.avg[k], () => { S.avg[k] = !S.avg[k]; this.buildRows(); this.charts.forEach((c) => this.refresh(c)); });
+      add(S.hide[k] ? ICON.eyeoff : ICON.eye, S.hide[k] ? T.show : T.hide, S.hide[k], () => this.toggleHide(k));
+      wrap.append(r);
+    });
+  }
+  toggleHide(k) { this.S.hide[k] = !this.S.hide[k]; this.buildRows(); this.buildTable(); this.render(); }
+
+  /* ---------- графика ---------- */
+  avgOf(id) {
+    const arr = this.cur[id], S = this.S; let sum = 0, cnt = 0;
+    for (let i = S.from; i <= S.to; i++) if (arr[i] != null) { sum += arr[i]; cnt++; }
+    return cnt ? sum / cnt : null;
+  }
+  /* Подредба на числата без застъпване: за всяко число пробваме 4 височини над/под края на стълба
+     и вземаме първата, където не пада върху вече поставено число; ако няма място, числото се скрива. */
+  placeLabels(c, mode) {
+    const S = this.S, out = {}, pair = c.ids.length === 2, ax = this.axesFor(c), n = S.to - S.from + 1;
+    const w = c.el.clientWidth || 800, H = c.el.clientHeight || 392, g = gridOf(pair);
+    const pw = w - g.left - g.right, ph = H - g.top - g.bottom, pitch = pw / n, band = pitch * 0.72, fs = mode.fs, placed = [];
+    const bothBars = pair && S.kind[c.ids[0]] === "bar" && S.kind[c.ids[1]] === "bar";
+    const bwS = Math.min(22, band / 2.3), bwY = Math.min(10, band / 2.3), tot = bwS + 0.3 * bwY + bwY;
+    c.ids.forEach((id, k) => {
+      const res = (out[id] = new Array(N)), a = ax[pair && this.sd(id).axis === 1 ? 1 : 0], arr = this.cur[id];
+      if (!(mode.show && !S.hide[id] && S.lab[id])) return;
+      const off = bothBars ? (k === 0 ? -tot / 2 + bwS / 2 : tot / 2 - bwY / 2) : 0;
+      for (let i = S.from; i <= S.to; i++) {
+        const v = arr[i]; if (v == null) continue;
+        const wd = this.lblText(id, v, mode).length * 0.6 * fs + 3, cx = g.left + (i - S.from + 0.5) * pitch + off;
+        const yEnd = g.top + ((a.max - v) / (a.max - a.min)) * ph, neg = v < 0;
+        let ok = false;
+        for (let r = 0; r < 4 && !ok; r++) {
+          const dist = 5 + r * (fs + 3), y0 = neg ? yEnd + dist : yEnd - dist - fs - 1, box = { x0: cx - wd / 2, x1: cx + wd / 2, y0, y1: y0 + fs + 1 };
+          if (box.y0 < 2 || box.y1 > g.top + ph) continue;
+          if (placed.some((q) => q.x0 < box.x1 && q.x1 > box.x0 && q.y0 < box.y1 && q.y1 > box.y0)) continue;
+          placed.push(box); res[i] = { position: neg ? "bottom" : "top", distance: dist }; ok = true;
+        }
+        if (!ok) res[i] = { show: false };
+      }
+    });
+    return out;
+  }
+  buildSeries(c) {
+    const { S, cur } = this, mode = this.lblMode(c), pair = c.ids.length === 2, lay = this.placeLabels(c, mode);
+    const surf = css("--surface"), ink = css("--ink"), muted = css("--muted"), series = [];
+    c.ids.forEach((id, k) => {
+      const sd = this.sd(id), color = css(sd.col), kind = S.kind[id], hid = S.hide[id], axis = pair && sd.axis === 1 ? 1 : 0, arr = cur[id], stacked = !!sd.parts && kind === "bar";
+      const itemLab = (v, i) => (lay[id] && lay[id][i]) || { position: v != null && v < 0 ? "bottom" : "top", distance: 5 };
+      const label = { show: mode.show && !hid && S.lab[id], position: "top", fontFamily: css("--font-num"), fontSize: mode.fs, fontWeight: 400, color: ink, formatter: (p) => this.lblText(id, arr[p.dataIndex], mode) };
+      const ml = [];
+      if (k === 0) ml.push({ yAxis: 0, lineStyle: { type: "solid", color: muted, width: 1 }, label: { show: false } });
+      if (S.avg[id] && !hid) {
+        const av = this.avgOf(id);
+        if (av != null) ml.push({ yAxis: av, lineStyle: { type: "dashed", color, width: 1.6 }, label: { show: true, position: "insideStartTop", color: ink, fontSize: 9, fontWeight: 400, fontFamily: css("--font-num"), formatter: () => T.avg + ": " + FV[this.def.vt[id]](av) } });
+      }
+      const mk = (withMl) => ({ silent: true, symbol: "none", animation: false, label: { show: false }, data: withMl ? ml : [] });
+      const common = { yAxisIndex: axis, silent: hid, animation: !reduce, emphasis: { disabled: hid } };
+      if (stacked) {
+        sd.parts.forEach(([pid, pcol], j) => {
+          const top = j === sd.parts.length - 1, col = css(pcol);
+          series.push({ ...common, id: id + "_" + pid, name: this.nameOf(pid), type: "bar", stack: id, barMaxWidth: pair ? 22 : 34, barCategoryGap: "28%",
+            label: top ? label : { show: false },
+            data: cur[pid].map((v, i) => { const o = { value: arr[i] == null ? null : v }; if (top) o.label = itemLab(arr[i], i); o.itemStyle = { borderRadius: top ? [3, 3, 0, 0] : [0, 0, 0, 0] }; return o; }),
+            itemStyle: { color: col, opacity: hid ? 0 : 1, borderColor: surf, borderWidth: 0.6 }, markLine: mk(top) });
+        });
+        return;
+      }
+      const data = arr.map((v, i) => { const o = { value: v, label: itemLab(v, i) }; if (kind === "bar") o.itemStyle = { borderRadius: v != null && v < 0 ? [0, 0, 3, 3] : [3, 3, 0, 0] }; return o; });
+      const base = { ...common, id, name: this.nameOf(id), label, data, markLine: mk(true) };
+      if (kind === "bar") series.push({ ...base, type: "bar", barMaxWidth: pair ? (sd.axis === 0 ? 22 : 10) : 34, barCategoryGap: "28%", itemStyle: { color, opacity: hid ? 0 : 1 } });
+      else series.push({ ...base, type: "line", symbol: "circle", symbolSize: 6, showSymbol: true, connectNulls: false, lineStyle: { width: 2, color, opacity: hid ? 0 : 1 }, itemStyle: { color, borderColor: surf, borderWidth: 1.5, opacity: hid ? 0 : 1 } });
+    });
+    return series;
+  }
+  tipHtml(c, ps) {
+    const { S, cur } = this, ink2 = css("--ink2"), pair = c.ids.length === 2, mono = css("--font-num"), minw = pair ? 230 : 150;
+    const i = Q.indexOf(ps[0].axisValue); if (i < 0) return "";
+    const row = (dot, name, val, extra) => '<div style="display:flex;align-items:center;gap:8px;justify-content:space-between;min-width:' + minw + "px" + (extra || "") + '"><span>' + dot + name + '</span><b style="font-family:' + mono + '">' + val + "</b></div>";
+    const dot = (col, sz) => '<span style="display:inline-block;width:' + (sz || 9) + "px;height:" + (sz || 9) + "px;border-radius:" + (sz ? "2px" : "50%") + ";background:" + col + ';margin-right:6px"></span>';
+    let html = '<div style="font-weight:700;margin-bottom:6px">' + Q[i] + "</div>";
+    c.ids.filter((id) => !S.hide[id]).forEach((id) => {
+      const sd = this.sd(id), t = this.def.vt[id];
+      html += row(dot(css(sd.col)), pair ? this.nameOf(id) : "", FV[t](cur[id][i]));
+      if (sd.parts && S.kind[id] === "bar") sd.parts.slice().reverse().forEach(([pid, pcol]) => { html += row(dot(css(pcol), 8), this.nameOf(pid), FV.num(cur[pid][i]), ";color:" + ink2 + ";font-size:11.5px;padding-left:4px"); });
+    });
+    const avgRows = c.ids.filter((id) => S.avg[id] && !S.hide[id] && this.avgOf(id) != null).map((id) => { const av = this.avgOf(id);
+      return row('<span style="display:inline-block;width:18px;height:2px;background:repeating-linear-gradient(90deg,' + css(this.sd(id).col) + ' 0 5px,transparent 5px 8px);margin-right:6px;vertical-align:middle"></span>', T.avg + (pair ? " – " + this.shortOf(id) : ""), FV[this.def.vt[id]](av), ";color:" + ink2); }).join("");
+    return html + (avgRows ? '<div style="border-top:1px solid ' + css("--line") + ';margin:6px 0 4px"></div>' + avgRows : "");
+  }
+  option(c) {
+    const S = this.S, ink2 = css("--ink2"), muted = css("--muted"), line = css("--line2"), surf = css("--surface"), ink = css("--ink"), c1 = css("--s1");
+    const ids = c.ids, pair = ids.length === 2, ax = this.axesFor(c);
+    const axBase = { type: "value", axisLabel: { color: muted, fontSize: 9 } };
+    const numAx = (i, pos, split) => ({ ...axBase, ...ax[i], position: pos, axisLabel: { ...axBase.axisLabel, formatter: (v) => (v < 0 ? "" : fmt(v)) }, splitLine: { show: split, lineStyle: { color: line } } });
+    const pctAx = (i, pos, split) => ({ ...axBase, ...ax[i], position: pos, axisLabel: { ...axBase.axisLabel, formatter: (v) => v + "%" }, splitLine: { show: split, lineStyle: { color: line } } });
+    const isNum = (id) => this.sd(id).axis === 0;
+    const yAxis = pair ? [numAx(0, "right", true), pctAx(1, "left", false)] : isNum(ids[0]) ? [numAx(0, "left", true)] : [pctAx(0, "left", true)];
+    return {
+      animation: !reduce, animationDuration: 500, textStyle: { fontFamily: css("--font-ui") },
+      grid: gridOf(pair),
+      tooltip: { trigger: "axis", axisPointer: { type: "line", lineStyle: { color: muted, type: "dashed" } }, backgroundColor: surf, borderColor: css("--line"), borderWidth: 1,
+        textStyle: { color: ink, fontFamily: css("--font-ui"), fontSize: 12.5 }, extraCssText: "border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);", formatter: (ps) => this.tipHtml(c, ps) },
+      xAxis: { type: "category", data: Q, boundaryGap: true, axisLine: { onZero: false, lineStyle: { color: css("--line") } }, axisTick: { show: false }, axisLabel: { color: muted, fontSize: 9, hideOverlap: true } },
+      yAxis,
+      dataZoom: [
+        { type: "slider", xAxisIndex: 0, startValue: S.from, endValue: S.to, height: 20, bottom: 4, filterMode: "filter", brushSelect: false, showDataShadow: true,
+          borderColor: css("--line"), backgroundColor: "transparent", fillerColor: "rgba(90,147,240,.16)", dataBackground: { lineStyle: { color: muted, width: 1 }, areaStyle: { color: css("--chip") } },
+          selectedDataBackground: { lineStyle: { color: c1 }, areaStyle: { color: c1, opacity: .25 } }, handleSize: "120%", handleStyle: { color: surf, borderColor: ink2 },
+          textStyle: { color: ink2, fontSize: 9 }, moveHandleSize: 6, labelFormatter: (v, str) => str },
+        { type: "inside", xAxisIndex: 0, filterMode: "filter", zoomOnMouseWheel: "ctrl", moveOnMouseMove: true, moveOnMouseWheel: false }
+      ],
+      series: this.buildSeries(c)
+    };
+  }
+  refresh(c) { c.inst.setOption({ yAxis: this.axesFor(c), series: this.buildSeries(c) }); }
+  render() { this.charts.forEach((c) => c.inst.setOption(this.option(c), true)); }
+
+  /* ---------- сваляне: точно това, което се вижда (без плъзгача) ---------- */
+  fname(c) {
+    const S = this.S; return this.def.file + "-" + (S.office === ALL ? "bulgaria" : translit(S.office).toLowerCase().replace(/\s+/g, "-")) + (c.ids.length === 1 ? "-" + c.ids[0] : "") + "-" + Q[S.from].replace(" ", "") + "-" + Q[S.to].replace(" ", "");
+  }
+  exportOption(c) {
+    const o = this.option(c);
+    o.animation = false; o.animationDuration = 0; o.series.forEach((x) => { x.animation = false; x.markLine && (x.markLine.animation = false); }); delete o.tooltip;
+    o.dataZoom = [{ type: "inside", xAxisIndex: 0, startValue: this.S.from, endValue: this.S.to, filterMode: "filter" }];
+    o.grid.bottom = 28;
+    if (c.ids.length === 1) o.title = { text: this.nameOf(c.ids[0]), left: 6, top: 2, textStyle: { fontSize: 11, fontWeight: 600, color: css("--ink2"), fontFamily: css("--font-ui") } };
+    return o;
+  }
+  async exportPng(c) {
+    const w = c.el.clientWidth, h = c.el.clientHeight - 30, ratio = 2;
+    const host = document.createElement("div");
+    host.style.cssText = "position:fixed;left:-99999px;top:0;width:" + w + "px;height:" + h + "px;pointer-events:none";
+    document.body.append(host);
+    try {
+      const inst = echarts.init(host, null, { renderer: "canvas", width: w, height: h, devicePixelRatio: ratio });
+      inst.setOption(this.exportOption(c));
+      await new Promise((ok) => requestAnimationFrame(() => setTimeout(ok, 80)));
+      const url = inst.getDataURL({ type: "png", pixelRatio: ratio, backgroundColor: css("--surface") });
+      inst.dispose();
+      const bin = atob(url.split(",")[1]), u = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      return new Blob([u], { type: "image/png" });
+    } finally { host.remove(); }
+  }
+  async doDownload(kind, c) {
+    try {
+      const S = this.S, cur = this.cur;
+      if (kind === "png") { await save(await this.exportPng(c), this.fname(c) + ".png"); return; }
+      const vids = c.ids.flatMap((id) => this.sd(id).exp);
+      const head = [T.quarter, ...vids.map((v) => this.nameOf(v) + " (" + this.unitOf(v) + ")")], rows = [];
+      for (let i = S.from; i <= S.to; i++) rows.push([Q[i], ...vids.map((v) => cur[v][i] ?? "")]);
+      if (kind === "xlsx") await save(xlsxBlob(head, rows, [0, ...vids.map((v) => (this.def.vt[v] === "num" ? 3 : 2))], T[this.p + ".title"]), this.fname(c) + ".xlsx");
+      else await save(new Blob(["﻿" + [head, ...rows].map((r) => r.map((v) => (typeof v === "string" && /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v)).join(";")).join("\r\n")], { type: "text/csv;charset=utf-8" }), this.fname(c) + ".csv");
+    } catch (e) { console.error(e); flash(T.dlErr); }
+  }
+  makeDl(c) {
+    const w = document.createElement("div"); w.className = "dlwrap";
+    const b = document.createElement("button"); b.className = "dl"; b.setAttribute("aria-haspopup", "true"); b.setAttribute("aria-expanded", "false"); b.append(T.download); b.insertAdjacentHTML("beforeend", ICON.dl);
+    const m = document.createElement("div"); m.className = "dlmenu"; m.hidden = true;
+    [["png", T.dlPng], ["xlsx", T.dlXlsx], ["csv", T.dlCsv]].forEach(([k, tx]) => { const x = document.createElement("button"); x.dataset.dl = k; x.textContent = tx; m.append(x); });
+    b.onclick = (e) => { e.stopPropagation(); blocks.forEach((bl) => bl.togglePop(false)); const open = m.hidden; closeMenus(); m.hidden = !open; b.setAttribute("aria-expanded", String(open)); };
+    m.onclick = (e) => { const k = e.target.dataset.dl; if (!k) return; closeMenus(); this.doDownload(k, c); };
+    w.append(b, m); return w;
+  }
+
+  mount() {
+    const S = this.S, r = this.r;
+    this.ro.disconnect(); this.charts.forEach((c) => c.inst.dispose()); this.charts = [];
+    const host = r("charts"); host.innerHTML = ""; host.className = "charts" + (S.split ? " two" : ""); r("dlSlot").innerHTML = "";
+    (S.split ? this.def.series.map((s) => [s.id]) : [this.def.series.map((s) => s.id)]).forEach((ids) => {
+      const el = document.createElement("div"); el.className = "cv"; el.setAttribute("role", "img");
+      el.setAttribute("aria-label", ids.length === 2 ? T[this.p + ".chartPair"] : T[this.p + ".chartOne"] + this.nameOf(ids[0]));
+      host.append(el);
+      const inst = echarts.init(el, null, { renderer: "svg" }), c = { inst, el, ids }; this.charts.push(c);
+      if (S.split) {
+        const cap = document.createElement("div"); cap.className = "cap"; const dot = document.createElement("i"); dot.style.background = "var(" + this.sd(ids[0]).col + ")"; cap.append(dot, this.nameOf(ids[0]));
+        const d = document.createElement("div"); d.className = "cvdl"; d.append(this.makeDl(c)); el.append(cap, d);
+      }
+      inst.on("datazoom", () => {
+        const o = inst.getOption().dataZoom[0], conv = (v) => (typeof v === "number" ? Math.round(v) : Q.indexOf(v));
+        const a = conv(o.startValue), b = conv(o.endValue);
+        if (a >= 0 && b >= 0 && (a !== S.from || b !== S.to)) this.setWindow(a, b, false, c);
+      });
+      this.ro.observe(el);
+    });
+    if (!S.split) r("dlSlot").append(this.makeDl(this.charts[0]));
+    this.render();
+    r("vOne").setAttribute("aria-pressed", String(!S.split)); r("vTwo").setAttribute("aria-pressed", String(S.split));
+  }
+
+  /* ---------- таблица ---------- */
+  buildTable() {
+    const { cur, S } = this, t = this.r("tbl"), idx = [...Q.keys()].reverse();
+    const head = '<thead><tr><th class="first">' + T.thIndicator + "</th>" + idx.map((i) => '<th data-col="' + i + '">' + Q[i] + "</th>").join("") + "</tr></thead>";
+    const row = (rw) => {
+      const name = T[this.p + "." + rw.id + ".row"], hid = rw.tog && S.hide[rw.tog], f = FV[this.def.vt[rw.id]];
+      const lab = rw.tog ? '<button data-toggle="' + rw.tog + '" aria-pressed="' + !hid + '" aria-label="' + (hid ? T.show : T.hide) + " " + name + '">' : "<span>";
+      return '<tr><td class="first">' + lab + '<span class="sw" style="background:var(' + rw.col + ");opacity:" + (hid ? 0.25 : 1) + '"></span>' + name + (rw.tog ? "</button>" : "</span>") + "</td>"
+        + idx.map((i) => '<td data-col="' + i + '">' + f(cur[rw.id][i]) + "</td>").join("") + "</tr>";
+    };
+    t.innerHTML = head + "<tbody>" + this.def.rows.map(row).join("") + "</tbody>";
+    t.querySelectorAll("[data-toggle]").forEach((b) => (b.onclick = () => this.toggleHide(b.dataset.toggle)));
+    this.syncControls();
+  }
+}
+
+/* ============ СВАЛЯНЕ: общи помощници ============ */
 async function save(blob, name) {
   try { const d = window.claude && (await window.claude.use("downloads")); if (d) { await d.save({ filename: name, data: blob }); return; } } catch (e) { if (e && e.code === "declined") return; }
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
-const fname = (c) => "prodazhbi-" + (S.office === ALL ? "bulgaria" : translit(S.office).toLowerCase().replace(/\s+/g, "-")) + (c.ids.length === 1 ? "-" + c.ids[0] : "") + "-" + Q[S.from].replace(" ", "") + "-" + Q[S.to].replace(" ", "");
-function exportOption(c) {
-  const o = option(c);
-  o.animation = false; o.animationDuration = 0; o.series.forEach((x) => { x.animation = false; x.markLine && (x.markLine.animation = false); }); delete o.tooltip;
-  o.dataZoom = [{ type: "inside", xAxisIndex: 0, startValue: S.from, endValue: S.to, filterMode: "filter" }];
-  o.grid.bottom = 28;
-  if (c.ids.length === 1) o.title = { text: META[c.ids[0]].name(), left: 6, top: 2, textStyle: { fontSize: 11, fontWeight: 600, color: css("--ink2"), fontFamily: css("--font-ui") } };
-  return o;
-}
 function flash(msg) {
   const d = document.createElement("div"); d.className = "toast"; d.setAttribute("role", "alert"); d.textContent = msg; document.body.append(d); setTimeout(() => d.remove(), 4000);
-}
-/* PNG: същата графика, нарисувана скрито на канвас (без плъзгача) */
-async function exportPng(c) {
-  const w = c.el.clientWidth, h = c.el.clientHeight - 30, ratio = 2;
-  const host = document.createElement("div");
-  host.style.cssText = "position:fixed;left:-99999px;top:0;width:" + w + "px;height:" + h + "px;pointer-events:none";
-  document.body.append(host);
-  try {
-    const inst = echarts.init(host, null, { renderer: "canvas", width: w, height: h, devicePixelRatio: ratio });
-    inst.setOption(exportOption(c));
-    await new Promise((ok) => requestAnimationFrame(() => setTimeout(ok, 80)));
-    const url = inst.getDataURL({ type: "png", pixelRatio: ratio, backgroundColor: css("--surface") });
-    inst.dispose();
-    const bin = atob(url.split(",")[1]), u = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
-    return new Blob([u], { type: "image/png" });
-  } finally { host.remove(); }
 }
 /* Excel (.xlsx): малък вграден генератор, без външни библиотеки */
 const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
@@ -626,107 +682,49 @@ function xlsxBlob(head, rows, fmts, sheet) {
     ["xl/worksheets/sheet1.xml", X + "<worksheet " + NS + '><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>' + cols + "</cols><sheetData>" + hr + br + "</sheetData></worksheet>"]
   ]);
 }
-async function doDownload(kind, c) {
-  try {
-    if (kind === "png") { const b = await exportPng(c); await save(b, fname(c) + ".png"); return; }
-    const head = [T.quarter, ...c.ids.map((id) => META[id].name() + " (" + META[id].unit() + ")")], rows = [];
-    for (let i = S.from; i <= S.to; i++) rows.push([Q[i], ...c.ids.map((id) => (id === "sales" ? cur.s[i] : cur.y[i]) ?? "")]);
-    if (kind === "xlsx") await save(xlsxBlob(head, rows, [0, ...c.ids.map((id) => (id === "sales" ? 3 : 2))], T.seriesSales), fname(c) + ".xlsx");
-    else await save(new Blob(["﻿" + [head, ...rows].map((r) => r.map((v) => (typeof v === "string" && /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v)).join(";")).join("\r\n")], { type: "text/csv;charset=utf-8" }), fname(c) + ".csv");
-  } catch (e) { console.error(e); flash(T.dlErr); }
-}
-function makeDl(c) {
-  const w = document.createElement("div"); w.className = "dlwrap";
-  const b = document.createElement("button"); b.className = "dl"; b.setAttribute("aria-haspopup", "true"); b.setAttribute("aria-expanded", "false"); b.append(T.download); b.insertAdjacentHTML("beforeend", ICON.dl);
-  const m = document.createElement("div"); m.className = "dlmenu"; m.hidden = true;
-  [["png", T.dlPng], ["xlsx", T.dlXlsx], ["csv", T.dlCsv]].forEach(([k, tx]) => { const x = document.createElement("button"); x.dataset.dl = k; x.textContent = tx; m.append(x); });
-  b.onclick = (e) => { e.stopPropagation(); togglePop(false); const open = m.hidden; closeMenus(); m.hidden = !open; b.setAttribute("aria-expanded", String(open)); };
-  m.onclick = (e) => { const k = e.target.dataset.dl; if (!k) return; closeMenus(); doDownload(k, c); };
-  w.append(b, m); return w;
-}
 
-function mount() {
-  ro.disconnect(); charts.forEach((c) => c.inst.dispose()); charts = [];
-  const host = $("charts"); host.innerHTML = ""; host.className = "charts" + (S.split ? " two" : ""); $("dlSlot").innerHTML = "";
-  (S.split ? [["sales"], ["yoy"]] : [["sales", "yoy"]]).forEach((ids) => {
-    const el = document.createElement("div"); el.className = "cv"; el.setAttribute("role", "img");
-    el.setAttribute("aria-label", ids.length === 2 ? T.chartPair : T.chartOne + META[ids[0]].name());
-    host.append(el);
-    const inst = echarts.init(el, null, { renderer: "svg" }), c = { inst, el, ids }; charts.push(c);
-    if (S.split) {
-      const cap = document.createElement("div"); cap.className = "cap"; const dot = document.createElement("i"); dot.style.background = "var(" + META[ids[0]].col + ")"; cap.append(dot, META[ids[0]].name());
-      const d = document.createElement("div"); d.className = "cvdl"; d.append(makeDl(c)); el.append(cap, d);
-    }
-    inst.on("datazoom", () => {
-      const o = inst.getOption().dataZoom[0], conv = (v) => (typeof v === "number" ? Math.round(v) : Q.indexOf(v));
-      const a = conv(o.startValue), b = conv(o.endValue);
-      if (a >= 0 && b >= 0 && (a !== S.from || b !== S.to)) setWindow(a, b, false, c);
-    });
-    ro.observe(el);
-  });
-  if (!S.split) $("dlSlot").append(makeDl(charts[0]));
-  render();
-  $("vOne").setAttribute("aria-pressed", String(!S.split)); $("vTwo").setAttribute("aria-pressed", String(S.split));
+/* ============ СТРАНИЦА ============ */
+function paintShell() {
+  document.documentElement.lang = LANG; document.title = T.pageTitle;
+  document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = T[el.dataset.i18n]));
+  $("c-bnb").textContent = T.navBnb + ". " + T.comingSoon; $("c-contacts").textContent = T.navContacts + ". " + T.comingSoon;
+  document.querySelectorAll(".ic").forEach((el) => el.style.setProperty("--m", 'url("' + ICONS[el.dataset.icon] + '")'));
+  const lb = $("langBtn"); lb.innerHTML = LANG === "bg" ? FLAG_EN : FLAG_BG; lb.title = lb.ariaLabel = T.langTo;
+  const tb = $("themeBtn"); tb.title = tb.ariaLabel = isDark() ? T.themeToLight : T.themeToDark;
 }
-
-/* ---------- таблица ---------- */
-function buildTable() {
-  const { s, y } = cur, t = $("tbl");
-  const idx = [...Q.keys()].reverse();
-  const head = '<thead><tr><th class="first">' + T.thIndicator + "</th>" + idx.map((i) => '<th data-col="' + i + '">' + Q[i] + "</th>").join("") + "</tr></thead>";
-  const row = (id, name, arr, f) => '<tr><td class="first"><button data-toggle="' + id + '" aria-pressed="' + !S.hide[id] + '" aria-label="' + (S.hide[id] ? T.show : T.hide) + " " + name + '"><span class="sw" style="background:var(' + META[id].col + ");opacity:" + (S.hide[id] ? 0.25 : 1) + '"></span>' + name + "</button></td>"
-    + idx.map((i) => '<td data-col="' + i + '">' + f(arr[i]) + "</td>").join("") + "</tr>";
-  t.innerHTML = head + "<tbody>" + row("sales", T.seriesSales + " (" + T.unitSales + ")", s, fmt) + row("yoy", T.yoyShort, y, pct) + "</tbody>";
-  t.querySelectorAll("[data-toggle]").forEach((b) => (b.onclick = () => toggleHide(b.dataset.toggle)));
-  syncControls();
-}
-
-/* ---------- събития ---------- */
-function loadOffice() { cur = compute(S.office); buildTable(); if (charts.length) render(); fit($("selOffice")); }
-let LOADMSG = "";
-function showMsg(txt, isErr) {
-  charts.forEach((c) => c.inst.dispose()); charts = []; ro.disconnect();
-  const h = $("charts"); h.className = "charts"; h.innerHTML = "";
-  const d = document.createElement("div"); d.className = "msg"; d.setAttribute("role", isErr ? "alert" : "status");
-  const p = document.createElement("p"); p.textContent = (isErr ? T.errTitle + " " : "") + txt; d.append(p);
-  if (isErr && LOADMSG && LOADMSG !== "nocfg") { const s = document.createElement("code"); s.textContent = LOADMSG; d.append(s); }
+function showMsg(txt, isErr, extra) {
+  const h = $("blocks"); h.innerHTML = "";
+  const d = document.createElement("div"); d.className = "msg card"; d.setAttribute("role", isErr ? "alert" : "status");
+  const p = document.createElement("p"); p.textContent = txt; d.append(p);
+  if (extra) { const s = document.createElement("code"); s.textContent = extra; d.append(s); }
   h.append(d);
 }
-function applyAll() {
-  paintText();
-  if (!DATA_OK) { showMsg(LOADMSG === "nocfg" ? T.errNoCfg : LOADMSG ? "" : T.loading, !!LOADMSG); return; }
-  fillSelects(); buildRows(); buildTable(); mount();
-}
-function setLang(l) { LANG = l; T = I18N[l]; try { localStorage.setItem("lang", l); } catch (e) {} applyAll(); }
-$("langBtn").onclick = () => setLang(LANG === "bg" ? "en" : "bg");
-$("themeBtn").onclick = () => { const t = isDark() ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("theme", t); } catch (e) {} paintText(); };
-$("vOne").onclick = () => { if (S.split) { S.split = false; mount(); } };
-$("vTwo").onclick = () => { if (!S.split) { S.split = true; mount(); } };
-$("selOffice").onchange = (e) => { S.office = e.target.value; loadOffice(); };
-const infoBtn = $("infoBtn"), pop = $("pop");
-function togglePop(open) { pop.hidden = !open; infoBtn.setAttribute("aria-expanded", String(open)); }
-infoBtn.onclick = (e) => { e.stopPropagation(); closeMenus(); togglePop(pop.hidden); };
-document.addEventListener("click", (e) => { closeMenus(); if (!pop.hidden && !pop.contains(e.target)) togglePop(false); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") { togglePop(false); closeMenus(); } });
+function setLang(l) { LANG = l; try { localStorage.setItem("lang", l); } catch (e) {} setT(); paintShell(); blocks.forEach((b) => b.repaint()); }
+$("langBtn").onclick = () => { if (TEXTS) setLang(LANG === "bg" ? "en" : "bg"); };
+$("themeBtn").onclick = () => { const t = isDark() ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("theme", t); } catch (e) {} if (TEXTS) paintShell(); };
+document.addEventListener("click", (e) => { closeMenus(); blocks.forEach((b) => { const pop = b.r("pop"); if (!pop.hidden && !pop.contains(e.target)) b.togglePop(false); }); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { blocks.forEach((b) => b.togglePop(false)); closeMenus(); } });
 document.querySelectorAll(".nav").forEach((b) => (b.onclick = () => {
   document.querySelectorAll(".nav").forEach((x) => x.removeAttribute("aria-current")); b.setAttribute("aria-current", "page");
   ["agency", "bnb", "contacts"].forEach((v) => ($("v-" + v).hidden = v !== b.dataset.view));
-  if (b.dataset.view === "agency") charts.forEach((c) => c.inst.resize());
+  if (b.dataset.view === "agency") blocks.forEach((bl) => bl.charts.forEach((c) => c.inst.resize()));
 }));
+const renderAll = () => blocks.forEach((b) => b.charts.length && b.render());
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { renderAll(); if (TEXTS) paintShell(); });
+new MutationObserver(renderAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
-/* ---------- старт ---------- */
+/* ============ СТАРТ ============ */
 async function boot() {
-  applyAll();   // показва „Зареждане…“
-  if (!(CONFIG.supabaseUrl && CONFIG.anonKey)) { LOADMSG = "nocfg"; applyAll(); return; }
-  try { D = await loadFromSupabase(); } catch (e) { console.error(e); LOADMSG = String(e.message || e); applyAll(); return; }
+  showMsg("Зареждане…", false);
+  try { TEXTS = await loadTexts(); } catch (e) { console.error(e); showMsg("Липсват текстовете на сайта (папка texts).", true, String(e.message || e)); return; }
+  setT(); paintShell(); showMsg(T.loading, false);
+  if (!(CONFIG.supabaseUrl && CONFIG.anonKey)) { showMsg(T.errNoCfg, true); return; }
+  try { D = await loadFromSupabase(); } catch (e) { console.error(e); showMsg(T.errTitle, true, String(e.message || e)); return; }
   Q = D.q; N = Q.length; DATA_OK = true;
-  S.from = Math.max(0, N - 40); S.to = N - 1;   // начален период: 10 години
-  if (!D.o[S.office]) S.office = Object.keys(D.o)[0];
-  cur = compute(S.office);
-  applyAll();
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fit($("selOffice")));
+  $("blocks").innerHTML = "";
+  blocks = DEFS.map((d) => new Block(d, $("blocks")));
+  blocks.forEach((b) => b.start());
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => blocks.forEach((b) => b.fit(b.r("office"))));
 }
 boot();
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { render(); paintText(); });
-new MutationObserver(() => render()).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 </script>
