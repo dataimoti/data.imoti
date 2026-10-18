@@ -44,13 +44,13 @@ button { cursor: pointer; }
 
 .shell { display: grid; grid-template-columns: 83px minmax(0, 1fr); min-height: 100vh; }
 .rail { position: sticky; top: 0; align-self: start; height: 100vh; display: flex; flex-direction: column; gap: 6px;
-  padding: 14px 6px; border-right: 1px solid var(--line); background: var(--rail); }
+  padding: calc(34px + env(safe-area-inset-top, 0px)) 6px 14px; border-right: 1px solid var(--line); background: var(--rail); }
 .nav { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px 9px; border: 0; border-radius: 12px;
   background: transparent; color: var(--ink2); text-align: center; font-size: 10.5px; line-height: 1.2; font-weight: 500; text-wrap: balance; }
 .nav:hover, .nav[aria-current="page"] { background: var(--chip); }
 .ic { width: 26px; height: 26px; background: currentColor; -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
 
-.main { min-width: 0; padding-block: 12px 16px; padding-left: 28px; padding-right: max(28px, env(safe-area-inset-right, 0px)); }
+.main { min-width: 0; padding-block: calc(34px + env(safe-area-inset-top, 0px)) 16px; padding-left: 28px; padding-right: max(28px, env(safe-area-inset-right, 0px)); }
 .crumb { font-size: 12px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; font-weight: 600; }
 h1 { margin: 0 0 2px; font-size: 21px; line-height: 1.2; font-weight: 700; letter-spacing: -.01em; text-wrap: balance; }
 .sub { margin: 0 0 10px; color: var(--ink2); font-size: 12.5px; }
@@ -100,10 +100,11 @@ h1 { margin: 0 0 2px; font-size: 21px; line-height: 1.2; font-weight: 700; lette
 .cvdl { position: absolute; right: 0; top: 0; z-index: 3; }
 .cvdl .dlmenu { right: 0; }
 .nav[data-view="contacts"] { margin-top: auto; }
-.lang { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
-.lb { display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); border-radius: 8px; padding: 5px 4px; background: var(--surface); color: var(--ink2); font-size: 11px; font-weight: 600; }
-.lb:hover { background: var(--chip); }
-.lb[aria-pressed="true"] { background: var(--chip2); color: var(--ink); border-color: var(--muted); }
+.lang { margin-top: 6px; display: flex; flex-direction: column; gap: 6px; }
+.lb { display: flex; align-items: center; justify-content: center; height: 34px; border: 1px solid var(--line); border-radius: 10px; padding: 0; background: var(--surface); color: var(--ink2); }
+.lb:hover { background: var(--chip); color: var(--ink); }
+.lb svg { display: block; }
+#themeBtn svg { width: 22px; height: 22px; }
 .dlmenu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 6; min-width: 170px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 4px; box-shadow: 0 10px 30px rgba(0,0,0,.14); }
 .dlmenu button { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 8px 10px; border-radius: 7px; font-size: 13px; }
 .dlmenu button:hover { background: var(--chip); }
@@ -135,6 +136,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .out { opacity: .42; }
 
 .block { margin-bottom: 28px; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 20; background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 10px; font-size: 13px; }
 .msg { padding: 40px 16px; text-align: center; color: var(--ink2); }
 .msg code { display: block; margin-top: 8px; font-family: var(--font-num); font-size: 12px; color: var(--muted); word-break: break-word; }
 .coming { padding: 40px 24px; text-align: center; color: var(--ink2); }
@@ -155,15 +157,16 @@ tbody tr:last-child td { border-bottom: 0; }
 }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
 </style>
+<script>try{var __t=localStorage.getItem("theme");if(__t==="dark"||__t==="light")document.documentElement.setAttribute("data-theme",__t)}catch(e){}</script>
 
 <div class="shell">
   <nav class="rail" aria-label="Източници на данни">
     <button class="nav" data-view="agency" aria-current="page"><span class="ic" data-icon="agency"></span><span data-i18n="navAgency"></span></button>
     <button class="nav" data-view="bnb"><span class="ic" data-icon="bnb"></span><span data-i18n="navBnb"></span></button>
     <button class="nav" data-view="contacts"><span class="ic" data-icon="mail"></span><span data-i18n="navContacts"></span></button>
-    <div class="lang" role="group" aria-label="Език / Language">
-      <button class="lb" data-lang="bg" aria-pressed="true" title="Български"><svg width="20" height="13" viewBox="0 0 18 12" aria-hidden="true"><rect width="18" height="4" fill="#fff"/><rect y="4" width="18" height="4" fill="#00966e"/><rect y="8" width="18" height="4" fill="#d62612"/><rect width="18" height="12" fill="none" stroke="rgba(0,0,0,.22)"/></svg><span>BG</span></button>
-      <button class="lb" data-lang="en" aria-pressed="false" title="English"><svg width="20" height="13" viewBox="0 0 60 30" preserveAspectRatio="none" aria-hidden="true"><rect width="60" height="30" fill="#012169"/><path d="M0 0 60 30M60 0 0 30" stroke="#fff" stroke-width="6"/><path d="M0 0 60 30M60 0 0 30" stroke="#c8102e" stroke-width="2"/><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"/><path d="M30 0v30M0 15h60" stroke="#c8102e" stroke-width="6"/></svg><span>EN</span></button>
+    <div class="lang">
+      <button class="lb" id="themeBtn" type="button"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="17" r="4.6"/><path d="M12 8.2v2M12 23.8v2M3.2 17h2M18.8 17h2M5.8 10.8l1.4 1.4M16.8 21.8l1.4 1.4M5.8 23.2l1.4-1.4"/><path d="M24.2 6.5a6.6 6.6 0 1 0 3.4 12.2 7.6 7.6 0 0 1-3.4-12.2z"/></svg></button>
+      <button class="lb" id="langBtn" type="button"></button>
     </div>
   </nav>
 
@@ -230,7 +233,8 @@ const I18N = {
     tagOn: "Скрий числата върху графиката", tagOff: "Покажи числата върху графиката",
     avgOn: "Скрий средната линия", avgOff: "Покажи средната линия за периода", avg: "Средно",
     hide: "Скрий", show: "Покажи",
-    download: "Свали", dlPng: "Картинка (PNG)", dlCsv: "Таблица (CSV)",
+    download: "Свали", dlPng: "Картинка (PNG)", dlXlsx: "Таблица (Excel)", dlCsv: "Таблица (CSV)", dlErr: "Свалянето не успя. Опитайте отново.",
+    themeToDark: "Тъмен режим", themeToLight: "Светъл режим", langTo: "English",
     viewOne: "Една графика с два показателя", viewTwo: "Две графики една до друга, по един показател", viewGroup: "Изглед на графиките",
     infoBtn: "Информация за данните", officeLabel: "Служба",
     chartPair: "Графика на продажбите и годишната промяна по тримесечия", chartOne: "Графика: ",
@@ -261,7 +265,8 @@ const I18N = {
     tagOn: "Hide values on the chart", tagOff: "Show values on the chart",
     avgOn: "Hide the average line", avgOff: "Show the average line for the period", avg: "Avg",
     hide: "Hide", show: "Show",
-    download: "Download", dlPng: "Image (PNG)", dlCsv: "Table (CSV)",
+    download: "Download", dlPng: "Image (PNG)", dlXlsx: "Table (Excel)", dlCsv: "Table (CSV)", dlErr: "Download failed. Please try again.",
+    themeToDark: "Dark mode", themeToLight: "Light mode", langTo: "Български",
     viewOne: "One chart with two indicators", viewTwo: "Two charts side by side, one indicator each", viewGroup: "Chart layout",
     infoBtn: "About the data", officeLabel: "Registry office",
     chartPair: "Chart of sales and year-over-year change by quarter", chartOne: "Chart: ",
@@ -291,7 +296,14 @@ const CONFIG = Object.assign({
 /* превръща редовете от таблицата във вида, който ползва страницата */
 function buildData(rows) {
   const c = CONFIG.cols, qs = new Set(), by = {};
-  rows.forEach((r) => { const name = String(r[c.office]).replace(/^СВ\s*-\s*/, "").trim(), q = r[c.year] * 10 + Number(r[c.quarter]); qs.add(q); (by[name] = by[name] || {})[q] = r[c.sales]; });
+  rows.forEach((r) => { const name = String(r[c.office]).replace(/^(?:СВ|\uFFFD+В)\s*-\s*/, "").trim(), q = r[c.year] * 10 + Number(r[c.quarter]); qs.add(q); (by[name] = by[name] || {})[q] = r[c.sales]; });
+  /* имена с повредени букви (�) се слепват с правилното име на същата служба */
+  const good = Object.keys(by).filter((n) => !n.includes("\uFFFD"));
+  Object.keys(by).filter((n) => n.includes("\uFFFD")).forEach((bad) => {
+    const re = new RegExp("^" + bad.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\uFFFD+/g, ".{1,4}") + "$"), hit = good.filter((g) => re.test(g));
+    if (hit.length === 1) { for (const q in by[bad]) if (by[hit[0]][q] == null) by[hit[0]][q] = by[bad][q]; delete by[bad]; }
+    else { console.warn("Повредено име на служба:", bad); }
+  });
   const keys = [...qs].sort((a, b) => a - b), o = {};
   Object.keys(by).forEach((n) => { o[n] = keys.map((k) => (by[n][k] == null ? null : Number(by[n][k]))); });
   return { q: keys.map((k) => Math.floor(k / 10) + " Q" + (k % 10)), o };
@@ -311,6 +323,9 @@ const ICONS = { agency: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgC
 
 let LANG = "bg"; try { const s = localStorage.getItem("lang"); if (s === "en" || s === "bg") LANG = s; } catch (e) {}
 let T = I18N[LANG];
+const FLAG_BG = '<svg width="26" height="17" viewBox="0 0 18 12" aria-hidden="true"><rect width="18" height="4" fill="#fff"/><rect y="4" width="18" height="4" fill="#00966e"/><rect y="8" width="18" height="4" fill="#d62612"/><rect width="18" height="12" fill="none" stroke="rgba(0,0,0,.25)"/></svg>';
+const FLAG_EN = '<svg width="26" height="17" viewBox="0 0 60 30" preserveAspectRatio="none" aria-hidden="true"><rect width="60" height="30" fill="#012169"/><path d="M0 0 60 30M60 0 0 30" stroke="#fff" stroke-width="6"/><path d="M0 0 60 30M60 0 0 30" stroke="#c8102e" stroke-width="2"/><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"/><path d="M30 0v30M0 15h60" stroke="#c8102e" stroke-width="6"/></svg>';
+const isDark = () => { const t = document.documentElement.getAttribute("data-theme"); return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; };
 let D = { q: [], o: {} }, Q = D.q, N = 0, DATA_OK = false;
 const ALL = "__all";
 const $ = (id) => document.getElementById(id);
@@ -354,7 +369,8 @@ function paintText() {
   const a = document.createElement("a"); a.href = T.sourceUrl; a.target = "_blank"; a.rel = "noopener"; a.textContent = T.sourceLabel;
   const p = document.createElement("p"); p.style.marginTop = "10px"; p.append(a); pop.append(p);
   document.querySelectorAll(".ic").forEach((el) => el.style.setProperty("--m", 'url("' + ICONS[el.dataset.icon] + '")'));
-  document.querySelectorAll(".lb").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === LANG)));
+  const lb = $("langBtn"); lb.innerHTML = LANG === "bg" ? FLAG_EN : FLAG_BG; lb.title = lb.ariaLabel = T.langTo;
+  const tb = $("themeBtn"); tb.title = tb.ariaLabel = isDark() ? T.themeToLight : T.themeToDark;
 }
 
 /* ---------- филтри ---------- */
@@ -527,28 +543,72 @@ function exportOption(c) {
   if (c.ids.length === 1) o.title = { text: META[c.ids[0]].name(), left: 6, top: 2, textStyle: { fontSize: 13, fontWeight: 600, color: css("--ink2"), fontFamily: css("--font-ui") } };
   return o;
 }
+function flash(msg) {
+  const d = document.createElement("div"); d.className = "toast"; d.setAttribute("role", "alert"); d.textContent = msg; document.body.append(d); setTimeout(() => d.remove(), 4000);
+}
+/* PNG: същата графика, нарисувана скрито на канвас (без плъзгача) */
 async function exportPng(c) {
-  const w = c.el.clientWidth, h = c.el.clientHeight - 30;
-  let svg;
-  try { const inst = echarts.init(null, null, { renderer: "svg", ssr: true, width: w, height: h }); inst.setOption(exportOption(c)); svg = inst.renderToSVGString(); inst.dispose(); }
-  catch (e) { svg = c.inst.renderToSVGString(); }
-  const im = new Image(); await new Promise((ok, no) => { im.onload = ok; im.onerror = no; im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); });
-  const cv = document.createElement("canvas"); cv.width = w * 2; cv.height = h * 2;
-  const g = cv.getContext("2d"); g.fillStyle = css("--surface"); g.fillRect(0, 0, cv.width, cv.height); g.drawImage(im, 0, 0, cv.width, cv.height);
-  return new Promise((ok) => cv.toBlob(ok));
+  const w = c.el.clientWidth, h = c.el.clientHeight - 30, ratio = 2;
+  const host = document.createElement("div");
+  host.style.cssText = "position:fixed;left:-99999px;top:0;width:" + w + "px;height:" + h + "px;pointer-events:none";
+  document.body.append(host);
+  try {
+    const inst = echarts.init(host, null, { renderer: "canvas", width: w, height: h, devicePixelRatio: ratio });
+    inst.setOption(exportOption(c));
+    const url = inst.getDataURL({ type: "png", pixelRatio: ratio, backgroundColor: css("--surface") });
+    inst.dispose();
+    const bin = atob(url.split(",")[1]), u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    return new Blob([u], { type: "image/png" });
+  } finally { host.remove(); }
+}
+/* Excel (.xlsx): малък вграден генератор, без външни библиотеки */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = (u) => { let c = 0xFFFFFFFF; for (let i = 0; i < u.length; i++) c = CRC_T[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+function zipStore(files) {
+  const enc = new TextEncoder(), parts = [], cen = []; let off = 0;
+  const u16 = (v) => [v & 255, (v >> 8) & 255], u32 = (v) => [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255];
+  files.forEach(([n, txt]) => {
+    const nb = enc.encode(n), d = enc.encode(txt), crc = crc32(d);
+    const lh = new Uint8Array([0x50, 0x4b, 3, 4, ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(d.length), ...u32(d.length), ...u16(nb.length), ...u16(0)]);
+    parts.push(lh, nb, d);
+    cen.push(new Uint8Array([0x50, 0x4b, 1, 2, ...u16(20), ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(d.length), ...u32(d.length), ...u16(nb.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(off)]), nb);
+    off += lh.length + nb.length + d.length;
+  });
+  const cl = cen.reduce((a, x) => a + x.length, 0);
+  const end = new Uint8Array([0x50, 0x4b, 5, 6, 0, 0, 0, 0, ...u16(files.length), ...u16(files.length), ...u32(cl), ...u32(off), 0, 0]);
+  return new Blob([...parts, ...cen, end], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+}
+function xlsxBlob(head, rows, fmts, sheet) {
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"), L = (i) => String.fromCharCode(65 + i);
+  const cell = (v, r, i, st) => (v == null || v === "" ? "" : typeof v === "number" ? '<c r="' + L(i) + r + '" s="' + st + '"><v>' + v + "</v></c>" : '<c r="' + L(i) + r + '" t="inlineStr" s="' + st + '"><is><t>' + esc(v) + "</t></is></c>");
+  const hr = '<row r="1" ht="48" customHeight="1">' + head.map((v, i) => cell(v, 1, i, 1)).join("") + "</row>";
+  const br = rows.map((r, k) => '<row r="' + (k + 2) + '">' + r.map((v, i) => cell(v, k + 2, i, fmts[i])).join("") + "</row>").join("");
+  const cols = head.map((_, i) => '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + (i === 0 ? 14 : 24) + '" customWidth="1"/>').join("");
+  const X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n', NS = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"';
+  return zipStore([
+    ["[Content_Types].xml", X + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+    ["_rels/.rels", X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ["xl/workbook.xml", X + "<workbook " + NS + ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="' + esc(sheet).slice(0, 31) + '" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+    ["xl/_rels/workbook.xml.rels", X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ["xl/styles.xml", X + "<styleSheet " + NS + '><numFmts count="1"><numFmt numFmtId="164" formatCode="0.0"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment wrapText="1" vertical="center"/></xf><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="3" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'],
+    ["xl/worksheets/sheet1.xml", X + "<worksheet " + NS + '><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>' + cols + "</cols><sheetData>" + hr + br + "</sheetData></worksheet>"]
+  ]);
 }
 async function doDownload(kind, c) {
-  if (kind === "csv") {
-    const rows = [[T.quarter, ...c.ids.map((id) => META[id].name())]];
+  try {
+    if (kind === "png") { const b = await exportPng(c); await save(b, fname(c) + ".png"); return; }
+    const head = [T.quarter, ...c.ids.map((id) => META[id].name() + " (" + META[id].unit() + ")")], rows = [];
     for (let i = S.from; i <= S.to; i++) rows.push([Q[i], ...c.ids.map((id) => (id === "sales" ? cur.s[i] : cur.y[i]) ?? "")]);
-    save(new Blob(["﻿" + rows.map((r) => r.join(";")).join("\n")], { type: "text/csv;charset=utf-8" }), fname(c) + ".csv");
-  } else { const b = await exportPng(c); if (b) save(b, fname(c) + ".png"); }
+    if (kind === "xlsx") await save(xlsxBlob(head, rows, [0, ...c.ids.map((id) => (id === "sales" ? 3 : 2))], T.seriesSales), fname(c) + ".xlsx");
+    else await save(new Blob(["﻿" + [head, ...rows].map((r) => r.map((v) => (typeof v === "string" && /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v)).join(";")).join("\r\n")], { type: "text/csv;charset=utf-8" }), fname(c) + ".csv");
+  } catch (e) { console.error(e); flash(T.dlErr); }
 }
 function makeDl(c) {
   const w = document.createElement("div"); w.className = "dlwrap";
   const b = document.createElement("button"); b.className = "dl"; b.setAttribute("aria-haspopup", "true"); b.setAttribute("aria-expanded", "false"); b.append(T.download); b.insertAdjacentHTML("beforeend", ICON.dl);
   const m = document.createElement("div"); m.className = "dlmenu"; m.hidden = true;
-  [["png", T.dlPng], ["csv", T.dlCsv]].forEach(([k, tx]) => { const x = document.createElement("button"); x.dataset.dl = k; x.textContent = tx; m.append(x); });
+  [["png", T.dlPng], ["xlsx", T.dlXlsx], ["csv", T.dlCsv]].forEach(([k, tx]) => { const x = document.createElement("button"); x.dataset.dl = k; x.textContent = tx; m.append(x); });
   b.onclick = (e) => { e.stopPropagation(); togglePop(false); const open = m.hidden; closeMenus(); m.hidden = !open; b.setAttribute("aria-expanded", String(open)); };
   m.onclick = (e) => { const k = e.target.dataset.dl; if (!k) return; closeMenus(); doDownload(k, c); };
   w.append(b, m); return w;
@@ -607,7 +667,8 @@ function applyAll() {
   fillSelects(); buildRows(); buildTable(); mount();
 }
 function setLang(l) { LANG = l; T = I18N[l]; try { localStorage.setItem("lang", l); } catch (e) {} applyAll(); }
-document.querySelectorAll(".lb").forEach((b) => (b.onclick = () => { if (b.dataset.lang !== LANG) setLang(b.dataset.lang); }));
+$("langBtn").onclick = () => setLang(LANG === "bg" ? "en" : "bg");
+$("themeBtn").onclick = () => { const t = isDark() ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("theme", t); } catch (e) {} paintText(); };
 $("vOne").onclick = () => { if (S.split) { S.split = false; mount(); } };
 $("vTwo").onclick = () => { if (!S.split) { S.split = true; mount(); } };
 $("selOffice").onchange = (e) => { S.office = e.target.value; loadOffice(); };
@@ -635,6 +696,6 @@ async function boot() {
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fit($("selOffice")));
 }
 boot();
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { render(); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { render(); paintText(); });
 new MutationObserver(() => render()).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 </script>
