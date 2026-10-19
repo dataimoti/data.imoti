@@ -94,3 +94,29 @@ m.info3.h: Share of financed deals
 m.info3.p: (Statutory mortgages + Contractual mortgages) ÷ Sales × 100, for the same office and quarter.
 m.info4.h: Limitations
 m.info4.p: Mortgage data starts in 2006 Q2. This is a ratio of two separate counters in the report, not a tracking of individual deals: one purchase can have more than one mortgage, and a mortgage can be registered without a purchase. The share is therefore an approximate estimate of credit financing.
+
+## CHART 3 — New and deleted mortgages (prefix d.)
+d.title: New and deleted mortgages
+d.sub: How many new mortgages were registered and how many mortgages were deleted, by quarter.
+d.table: Values by quarter
+d.chartPair: Chart of new and deleted mortgages by quarter
+d.chartOne: Chart: 
+d.nw.name: New mortgages
+d.nw.short: New mortgages
+d.nw.row: New mortgages (total)
+d.nw.desc: Sum of the “Contractual mortgages” and “Statutory mortgages” columns in the Registry Agency report.
+d.leg.name: Statutory mortgages
+d.leg.row: Statutory mortgages
+d.con.name: Contractual mortgages
+d.con.row: Contractual mortgages
+d.del.name: Deleted mortgages
+d.del.short: Deleted mortgages
+d.del.row: Deleted mortgages
+d.info1.h: What it shows
+d.info1.p: How many new mortgages were registered in each office by quarter (blue bars) and how many mortgages were deleted in the same quarter (orange bars).
+d.info2.h: New mortgages
+d.info2.p: The sum of two columns in the Registry Agency report: Contractual mortgages (darker blue part) + Statutory mortgages (lighter blue part). The two parts are stacked into one bar.
+d.info3.h: Deleted mortgages
+d.info3.p: The value of the “Deleted mortgages” column in the Registry Agency report.
+d.info4.h: Limitations
+d.info4.p: Mortgage data starts in 2006 Q2. The two bars are separate counters for the quarter: deleted mortgages are often from earlier years, so the difference between them is not the exact net growth of mortgages.
