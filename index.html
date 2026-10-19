@@ -209,9 +209,9 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
    Текстовете са в папка texts/ (bg.md и en.md) и се редактират като обикновен текст. */
 const CONFIG = Object.assign({
   supabaseUrl: "", anonKey: "", table: "vpisvania",
-  cols: { office: "Служба по вписванията", sales: "Продажби", legal: "Законни ипотеки", contract: "Договорни ипотеки", year: "Година", quarter: "Тримесечие" }
+  cols: { office: "Служба по вписванията", sales: "Продажби", legal: "Законни ипотеки", contract: "Договорни ипотеки", deleted: "Заличени ипотеки", year: "Година", quarter: "Тримесечие" }
 }, window.APP_CONFIG || {});
-const FIELDS = ["sales", "legal", "contract"];
+const FIELDS = ["sales", "legal", "contract", "deleted"];
 
 /* превръща редовете от таблицата във вида, който ползва страницата */
 function buildData(rows) {
@@ -232,7 +232,7 @@ function buildData(rows) {
   return { q: keys.map((k) => Math.floor(k / 10) + " Q" + (k % 10)), f };
 }
 async function loadFromSupabase() {
-  const c = CONFIG.cols, sel = encodeURIComponent("id," + ["office", "sales", "legal", "contract", "year", "quarter"].map((k) => '"' + c[k] + '"').join(","));
+  const c = CONFIG.cols, sel = encodeURIComponent("id," + ["office", "sales", "legal", "contract", "deleted", "year", "quarter"].map((k) => '"' + c[k] + '"').join(","));
   const base = CONFIG.supabaseUrl.replace(/\/$/, "") + "/rest/v1/" + CONFIG.table + "?select=" + sel + "&order=id", rows = [];
   for (let off = 0; ; off += 1000) {
     const res = await fetch(base + "&limit=1000&offset=" + off, { headers: { apikey: CONFIG.anonKey, Authorization: "Bearer " + CONFIG.anonKey } });
@@ -282,7 +282,7 @@ const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const niceStep = (x) => { if (!(x > 0)) return 1; const p = Math.pow(10, Math.floor(Math.log10(x))); for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= x - 1e-9) return m * p; return 10 * p; };
 const gridOf = (pair, w) => (w && w < 600 ? { left: pair ? 40 : 44, right: pair ? 48 : 8, top: pair ? 14 : 44, bottom: 58 } : { left: pair ? 52 : 56, right: pair ? 62 : 16, top: pair ? 16 : 44, bottom: 58 });
 const sumF = (F, k) => Q.map((_, i) => { let t = 0, any = false; for (const n in F[k]) { const v = F[k][n][i]; if (v != null) { t += v; any = true; } } return any ? t : null; });
-const fieldsOf = (office) => (office === ALL ? { sales: sumF(D.f, "sales"), legal: sumF(D.f, "legal"), con: sumF(D.f, "contract") } : { sales: D.f.sales[office], legal: D.f.legal[office], con: D.f.contract[office] });
+const fieldsOf = (office) => (office === ALL ? { sales: sumF(D.f, "sales"), legal: sumF(D.f, "legal"), con: sumF(D.f, "contract"), del: sumF(D.f, "deleted") } : { sales: D.f.sales[office], legal: D.f.legal[office], con: D.f.contract[office], del: D.f.deleted[office] });
 
 /* ============ ОПИСАНИЕ НА ГРАФИКИТЕ ============
    Нова графика = ново описание тук (series: какво се рисува; rows: редовете на таблицата; calc: как се смятат стойностите). */
@@ -295,6 +295,11 @@ const DEFS = [
     series: [{ id: "mort", col: "--s1", axis: 0, parts: [["leg", "--s1b"], ["con", "--s1"]], exp: ["mort", "leg", "con"] }, { id: "share", col: "--s2", axis: 1, exp: ["share"] }],
     rows: [{ id: "share", tog: "share", col: "--s2" }, { id: "mort", tog: "mort", col: "--s1" }, { id: "leg", col: "--s1b" }, { id: "con", col: "--s1" }],
     calc: (F) => { const mort = F.legal.map((v, i) => (v == null || F.con[i] == null ? null : v + F.con[i])); return { mort, leg: F.legal, con: F.con, share: mort.map((v, i) => (v == null || F.sales[i] == null || F.sales[i] === 0 ? null : Math.round(1000 * v / F.sales[i]) / 10)) }; } }
+  ,
+  { key: "d", file: "ipoteki-novi-zalicheni", shared: true, vt: { nw: "num", leg: "num", con: "num", del: "num" },
+    series: [{ id: "nw", col: "--s1", axis: 0, parts: [["leg", "--s1b"], ["con", "--s1"]], exp: ["nw", "leg", "con"] }, { id: "del", col: "--s2", axis: 0, exp: ["del"] }],
+    rows: [{ id: "nw", tog: "nw", col: "--s1" }, { id: "leg", col: "--s1b" }, { id: "con", col: "--s1" }, { id: "del", tog: "del", col: "--s2" }],
+    calc: (F) => ({ nw: F.legal.map((v, i) => (v == null || F.con[i] == null ? null : v + F.con[i])), leg: F.legal, con: F.con, del: F.del }) }
 ];
 
 const ICON = {
@@ -347,6 +352,7 @@ class Block {
     this.unitOf = (id) => (this.def.vt[id] === "num" ? T.unitCount : "%");
     this.sd = (id) => this.def.series.find((s) => s.id === id);
   }
+  dual(c) { return c.ids.length === 2 && !this.def.shared; }
   togglePop(open) { const pop = this.r("pop"); pop.hidden = !open; this.r("infoBtn").setAttribute("aria-expanded", String(open)); }
   start() {
     const S = this.S; S.from = Math.max(0, N - 40); S.to = N - 1;
@@ -402,20 +408,18 @@ class Block {
 
   /* ---------- оси: нулата е на една и съща линия за двете оси ---------- */
   extent(ids) {
-    const { S, cur } = this, [a, b] = this.def.series.map((s) => s.id); let maxS = 0, maxY = 0, minY = 0;
-    for (let i = S.from; i <= S.to; i++) {
-      if (ids.includes(a) && cur[a][i] != null) maxS = Math.max(maxS, cur[a][i]);
-      if (ids.includes(b) && cur[b][i] != null) { maxY = Math.max(maxY, cur[b][i]); minY = Math.min(minY, cur[b][i]); }
-    }
+    const { S, cur } = this; let maxS = 0, maxY = 0, minY = 0;
+    ids.forEach((id) => { const arr = cur[id], num = this.sd(id).axis === 0;
+      for (let i = S.from; i <= S.to; i++) { const v = arr[i]; if (v == null) continue; if (num) maxS = Math.max(maxS, v); else { maxY = Math.max(maxY, v); minY = Math.min(minY, v); } } });
     return { maxS, maxY, minY };
   }
   /* ако най-високото число не се събира над стълба, добавяме още едно деление отгоре */
   axesFor(c) {
     const m = this.lblMode(c), S = this.S; let ex = m.show ? (m.maxRows >= 3 ? 2 : m.maxRows > 1 ? 1 : 0) : 0;
     if (!m.show || !c.ids.some((id) => S.lab[id] && !S.hide[id])) return this.axesCalc(c, ex);
-    const H = c.el.clientHeight || 392, ph = H - gridOf(c.ids.length === 2, c.el.clientWidth).top - gridOf(c.ids.length === 2, c.el.clientWidth).bottom, { maxS, maxY } = this.extent(c.ids);
+    const H = c.el.clientHeight || 392, gg = gridOf(this.dual(c), c.el.clientWidth), ph = H - gg.top - gg.bottom, { maxS, maxY } = this.extent(c.ids);
     for (let t = 0; t < 3; t++) {
-      const ax = this.axesCalc(c, ex), tops = c.ids.length === 2 ? [maxS, maxY] : [this.sd(c.ids[0]).axis === 0 ? maxS : maxY];
+      const ax = this.axesCalc(c, ex), tops = this.dual(c) ? [maxS, maxY] : [this.sd(c.ids[0]).axis === 0 ? maxS : maxY];
       if (ax.every((a, i) => ((a.max - tops[i]) / (a.max - a.min)) * ph >= m.fs + 9)) return ax;
       ex++;
     }
@@ -423,7 +427,7 @@ class Block {
   }
   axesCalc(c, ex) {
     const { maxS, maxY, minY } = this.extent(c.ids), ids = c.ids;
-    if (ids.length === 2) {
+    if (this.dual(c)) {
       const iL = niceStep(maxS / 5), nPos = Math.max(1, Math.ceil(maxS / iL - 1e-9)), negY = -minY;
       const iR = niceStep(Math.max(maxY / nPos, negY / 3, 1)), nNeg = negY > 0 ? Math.ceil(negY / iR - 1e-9) + ex : 0;
       return [{ min: -nNeg * iL, max: (nPos + ex) * iL, interval: iL }, { min: -nNeg * iR, max: (nPos + ex) * iR, interval: iR }];
@@ -434,7 +438,7 @@ class Block {
   }
   /* числата върху графиката: до 40 тримесечия (10 г.), винаги хоризонтални; при гъст период са по-дребни и без „%“ */
   lblMode(c) {
-    const S = this.S, n = S.to - S.from + 1, pair = c.ids.length === 2, w = c.el.clientWidth || 800;
+    const S = this.S, n = S.to - S.from + 1, pair = this.dual(c), w = c.el.clientWidth || 800;
     const dense = n > 20, fs = n > 28 ? 8 : n > 20 ? 8.5 : 9, pitch = (w - (pair ? 114 : 72)) / n, rows = {};
     c.ids.forEach((id) => { const chars = this.def.vt[id] === "num" ? 6 : dense ? 5 : 7; rows[id] = Math.min(3, Math.max(1, Math.ceil((chars * 0.6 * fs + 4) / pitch))); });
     return { show: n <= 40, rot: false, dense, fs, rows, maxRows: Math.max(...Object.values(rows)) };
@@ -475,11 +479,11 @@ class Block {
   /* Подредба на числата без застъпване: за всяко число пробваме 4 височини над/под края на стълба
      и вземаме първата, където не пада върху вече поставено число; ако няма място, числото се скрива. */
   placeLabels(c, mode) {
-    const S = this.S, out = {}, pair = c.ids.length === 2, ax = this.axesFor(c), n = S.to - S.from + 1;
+    const S = this.S, out = {}, pair = this.dual(c), ax = this.axesFor(c), n = S.to - S.from + 1;
     const w = c.el.clientWidth || 800, H = c.el.clientHeight || 392, g = gridOf(pair, w);
     const pw = w - g.left - g.right, ph = H - g.top - g.bottom, pitch = pw / n, band = pitch * 0.72, fs = mode.fs, placed = [];
-    const bothBars = pair && S.kind[c.ids[0]] === "bar" && S.kind[c.ids[1]] === "bar";
-    const bwS = Math.min(22, band / 2.3), bwY = Math.min(10, band / 2.3), tot = bwS + 0.3 * bwY + bwY;
+    const bothBars = c.ids.length === 2 && S.kind[c.ids[0]] === "bar" && S.kind[c.ids[1]] === "bar";
+    const bwS = Math.min(22, band / 2.3), bwY = Math.min(pair ? 10 : 22, band / 2.3), tot = bwS + 0.3 * bwY + bwY;
     c.ids.forEach((id, k) => {
       const res = (out[id] = new Array(N)), a = ax[pair && this.sd(id).axis === 1 ? 1 : 0], arr = this.cur[id];
       if (!(mode.show && !S.hide[id] && S.lab[id])) return;
@@ -501,7 +505,7 @@ class Block {
     return out;
   }
   buildSeries(c) {
-    const { S, cur } = this, mode = this.lblMode(c), pair = c.ids.length === 2, lay = this.placeLabels(c, mode);
+    const { S, cur } = this, mode = this.lblMode(c), pair = this.dual(c), two = c.ids.length === 2, lay = this.placeLabels(c, mode);
     const surf = css("--surface"), ink = css("--ink"), muted = css("--muted"), series = [];
     c.ids.forEach((id, k) => {
       const sd = this.sd(id), color = css(sd.col), kind = S.kind[id], hid = S.hide[id], axis = pair && sd.axis === 1 ? 1 : 0, arr = cur[id], stacked = !!sd.parts && kind === "bar";
@@ -518,7 +522,7 @@ class Block {
       if (stacked) {
         sd.parts.forEach(([pid, pcol], j) => {
           const top = j === sd.parts.length - 1, col = css(pcol);
-          series.push({ ...common, id: id + "_" + pid, name: this.nameOf(pid), type: "bar", stack: id, barMaxWidth: pair ? 22 : 34, barCategoryGap: "28%",
+          series.push({ ...common, id: id + "_" + pid, name: this.nameOf(pid), type: "bar", stack: id, barMaxWidth: two ? 22 : 34, barCategoryGap: "28%",
             label: top ? label : { show: false },
             data: cur[pid].map((v, i) => { const o = { value: arr[i] == null ? null : v }; if (top) o.label = itemLab(arr[i], i); o.itemStyle = { borderRadius: top ? [3, 3, 0, 0] : [0, 0, 0, 0] }; return o; }),
             itemStyle: { color: col, opacity: hid ? 0 : 1, borderColor: surf, borderWidth: 0.6 }, markLine: mk(top) });
@@ -527,7 +531,7 @@ class Block {
       }
       const data = arr.map((v, i) => { const o = { value: v, label: itemLab(v, i) }; if (kind === "bar") o.itemStyle = { borderRadius: v != null && v < 0 ? [0, 0, 3, 3] : [3, 3, 0, 0] }; return o; });
       const base = { ...common, id, name: this.nameOf(id), label, data, markLine: mk(true) };
-      if (kind === "bar") series.push({ ...base, type: "bar", barMaxWidth: pair ? (sd.axis === 0 ? 22 : 10) : 34, barCategoryGap: "28%", itemStyle: { color, opacity: hid ? 0 : 1 } });
+      if (kind === "bar") series.push({ ...base, type: "bar", barMaxWidth: two ? (sd.axis === 0 ? 22 : 10) : 34, barCategoryGap: "28%", itemStyle: { color, opacity: hid ? 0 : 1 } });
       else series.push({ ...base, type: "line", symbol: "circle", symbolSize: 6, showSymbol: true, connectNulls: false, lineStyle: { width: 2, color, opacity: hid ? 0 : 1 }, itemStyle: { color, borderColor: surf, borderWidth: 1.5, opacity: hid ? 0 : 1 } });
     });
     return series;
@@ -549,7 +553,7 @@ class Block {
   }
   option(c) {
     const S = this.S, ink2 = css("--ink2"), muted = css("--muted"), line = css("--line2"), surf = css("--surface"), ink = css("--ink"), c1 = css("--s1");
-    const ids = c.ids, pair = ids.length === 2, ax = this.axesFor(c);
+    const ids = c.ids, pair = this.dual(c), ax = this.axesFor(c);
     const axBase = { type: "value", axisLabel: { color: muted, fontSize: 9 } };
     const numAx = (i, pos, split) => ({ ...axBase, ...ax[i], position: pos, axisLabel: { ...axBase.axisLabel, formatter: (v) => (v < 0 ? "" : fmt(v)) }, splitLine: { show: split, lineStyle: { color: line } } });
     const pctAx = (i, pos, split) => ({ ...axBase, ...ax[i], position: pos, axisLabel: { ...axBase.axisLabel, formatter: (v) => v + "%" }, splitLine: { show: split, lineStyle: { color: line } } });
