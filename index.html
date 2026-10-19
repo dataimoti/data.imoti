@@ -209,9 +209,9 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
    Текстовете са в папка texts/ (bg.md и en.md) и се редактират като обикновен текст. */
 const CONFIG = Object.assign({
   supabaseUrl: "", anonKey: "", table: "vpisvania",
-  cols: { office: "Служба по вписванията", sales: "Продажби", legal: "Законни ипотеки", contract: "Договорни ипотеки", deleted: "Заличени ипотеки", year: "Година", quarter: "Тримесечие" }
+  cols: { office: "Служба по вписванията", sales: "Продажби", legal: "Законни ипотеки", contract: "Договорни ипотеки", deleted: "Заличени ипотеки", lien: "Възбрани", lienDel: "Заличени възбрани", year: "Година", quarter: "Тримесечие" }
 }, window.APP_CONFIG || {});
-const FIELDS = ["sales", "legal", "contract", "deleted"];
+const FIELDS = ["sales", "legal", "contract", "deleted", "lien", "lienDel"];
 
 /* превръща редовете от таблицата във вида, който ползва страницата */
 function buildData(rows) {
@@ -232,7 +232,7 @@ function buildData(rows) {
   return { q: keys.map((k) => Math.floor(k / 10) + " Q" + (k % 10)), f };
 }
 async function loadFromSupabase() {
-  const c = CONFIG.cols, sel = encodeURIComponent("id," + ["office", "sales", "legal", "contract", "deleted", "year", "quarter"].map((k) => '"' + c[k] + '"').join(","));
+  const c = CONFIG.cols, sel = encodeURIComponent("id," + ["office", "sales", "legal", "contract", "deleted", "lien", "lienDel", "year", "quarter"].map((k) => '"' + c[k] + '"').join(","));
   const base = CONFIG.supabaseUrl.replace(/\/$/, "") + "/rest/v1/" + CONFIG.table + "?select=" + sel + "&order=id", rows = [];
   for (let off = 0; ; off += 1000) {
     const res = await fetch(base + "&limit=1000&offset=" + off, { headers: { apikey: CONFIG.anonKey, Authorization: "Bearer " + CONFIG.anonKey } });
@@ -246,7 +246,12 @@ async function loadFromSupabase() {
 /* ============ ТЕКСТОВЕ (texts/bg.md, texts/en.md) ============ */
 function parseTexts(txt) {
   const o = {};
-  txt.split(/\r?\n/).forEach((l) => { if (!l.trim() || /^\s*#/.test(l)) return; const i = l.indexOf(":"); if (i > 0) o[l.slice(0, i).trim()] = l.slice(i + 1).trim(); });
+  let last = null;
+  txt.split(/\r?\n/).forEach((l) => {
+    if (!l.trim() || /^\s*#/.test(l)) return;
+    if (/^\s/.test(l) && last) { o[last] += " " + l.trim(); return; }   /* продължение на текста от предишния ред */
+    const i = l.indexOf(":"); if (i > 0) { last = l.slice(0, i).trim(); o[last] = l.slice(i + 1).trim(); }
+  });
   return o;
 }
 async function loadTexts() {
@@ -282,7 +287,7 @@ const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const niceStep = (x) => { if (!(x > 0)) return 1; const p = Math.pow(10, Math.floor(Math.log10(x))); for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= x - 1e-9) return m * p; return 10 * p; };
 const gridOf = (pair, w) => (w && w < 600 ? { left: pair ? 40 : 44, right: pair ? 48 : 8, top: pair ? 14 : 44, bottom: 58 } : { left: pair ? 52 : 56, right: pair ? 62 : 16, top: pair ? 16 : 44, bottom: 58 });
 const sumF = (F, k) => Q.map((_, i) => { let t = 0, any = false; for (const n in F[k]) { const v = F[k][n][i]; if (v != null) { t += v; any = true; } } return any ? t : null; });
-const fieldsOf = (office) => (office === ALL ? { sales: sumF(D.f, "sales"), legal: sumF(D.f, "legal"), con: sumF(D.f, "contract"), del: sumF(D.f, "deleted") } : { sales: D.f.sales[office], legal: D.f.legal[office], con: D.f.contract[office], del: D.f.deleted[office] });
+const fieldsOf = (office) => (office === ALL ? { sales: sumF(D.f, "sales"), legal: sumF(D.f, "legal"), con: sumF(D.f, "contract"), del: sumF(D.f, "deleted"), lien: sumF(D.f, "lien"), lienDel: sumF(D.f, "lienDel") } : { sales: D.f.sales[office], legal: D.f.legal[office], con: D.f.contract[office], del: D.f.deleted[office], lien: D.f.lien[office], lienDel: D.f.lienDel[office] });
 
 /* ============ ОПИСАНИЕ НА ГРАФИКИТЕ ============
    Нова графика = ново описание тук (series: какво се рисува; rows: редовете на таблицата; calc: как се смятат стойностите). */
@@ -299,7 +304,11 @@ const DEFS = [
   { key: "d", file: "ipoteki-novi-zalicheni", shared: true, vt: { nw: "num", leg: "num", con: "num", del: "num" },
     series: [{ id: "nw", col: "--s1", axis: 0, parts: [["leg", "--s1b"], ["con", "--s1"]], exp: ["nw", "leg", "con"] }, { id: "del", col: "--s2", axis: 0, exp: ["del"] }],
     rows: [{ id: "nw", tog: "nw", col: "--s1" }, { id: "leg", col: "--s1b" }, { id: "con", col: "--s1" }, { id: "del", tog: "del", col: "--s2" }],
-    calc: (F) => ({ nw: F.legal.map((v, i) => (v == null || F.con[i] == null ? null : v + F.con[i])), leg: F.legal, con: F.con, del: F.del }) }
+    calc: (F) => ({ nw: F.legal.map((v, i) => (v == null || F.con[i] == null ? null : v + F.con[i])), leg: F.legal, con: F.con, del: F.del }) },
+  { key: "v", file: "vazbrani", shared: true, vt: { lien: "num", lienDel: "num" },
+    series: [{ id: "lien", col: "--s1", axis: 0, exp: ["lien"] }, { id: "lienDel", col: "--s2", axis: 0, exp: ["lienDel"] }],
+    rows: [{ id: "lien", tog: "lien", col: "--s1" }, { id: "lienDel", tog: "lienDel", col: "--s2" }],
+    calc: (F) => ({ lien: F.lien, lienDel: F.lienDel }) }
 ];
 
 const ICON = {
@@ -634,7 +643,7 @@ class Block {
     const host = r("charts"); host.innerHTML = ""; host.className = "charts" + (S.split ? " two" : ""); r("dlSlot").innerHTML = "";
     (S.split ? this.def.series.map((s) => [s.id]) : [this.def.series.map((s) => s.id)]).forEach((ids) => {
       const el = document.createElement("div"); el.className = "cv"; el.setAttribute("role", "img");
-      el.setAttribute("aria-label", ids.length === 2 ? T[this.p + ".chartPair"] : T[this.p + ".chartOne"] + this.nameOf(ids[0]));
+      el.setAttribute("aria-label", ids.length === 2 ? T[this.p + ".chartPair"] : T[this.p + ".chartOne"] + " " + this.nameOf(ids[0]));
       host.append(el);
       const inst = echarts.init(el, null, { renderer: "svg" }), c = { inst, el, ids }; this.charts.push(c);
       if (S.split) {
