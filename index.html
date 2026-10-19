@@ -142,8 +142,11 @@ tbody tr:last-child td { border-bottom: 0; }
 .srow .nm .desc { display: block; margin-top: 2px; font-size: 10px; color: var(--muted); }
 .srow .nm .desc i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin: 0 4px 0 6px; vertical-align: -0.5px; }
 .msg.card { margin: 8px 0; }
+.fly { position: fixed; z-index: 30; min-width: 220px; max-width: calc(100vw - 16px); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 6px; box-shadow: 0 10px 30px rgba(0,0,0,.14); }
+.fly button { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 8px 10px; border-radius: 8px; font-size: 11.5px; color: var(--ink); }
+.fly button:hover { background: var(--chip); }
 
-.block { margin-bottom: 28px; }
+.block { margin-bottom: 28px; scroll-margin-top: 16px; }
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 20; background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 10px; font-size: 10.5px; }
 .msg { padding: 40px 16px; text-align: center; color: var(--ink2); }
 .msg code { display: block; margin-top: 8px; font-family: var(--font-num); font-size: 10px; color: var(--muted); word-break: break-word; }
@@ -160,6 +163,13 @@ tbody tr:last-child td { border-bottom: 0; }
   .main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 16px; }
   h1 { font-size: 18px; }
   .cv { height: 360px; }
+  .main { padding-left: max(6px, env(safe-area-inset-left, 0px)); padding-right: max(6px, env(safe-area-inset-right, 0px)); }
+  .block h1, .block .sub { padding-left: 6px; }
+  .card { border-radius: 10px; }
+  .plot { padding: 8px 4px 4px; }
+  .thead { padding: 8px 10px 6px; }
+  th, td { padding: 4px 8px; }
+  .block { scroll-margin-top: 74px; }
   .charts.two { grid-template-columns: minmax(0, 1fr); }
   th.first, td.first { min-width: 150px; max-width: 150px; }
 }
@@ -188,6 +198,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     <div id="v-contacts" hidden><div class="card coming" id="c-contacts"></div></div>
   </main>
 </div>
+
+<div class="fly" id="fly" role="menu" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
 <script src="config.js"></script>
@@ -268,7 +280,7 @@ const oName = (n) => (n === ALL ? T.allCountry : LANG === "en" ? translit(n) : n
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const niceStep = (x) => { if (!(x > 0)) return 1; const p = Math.pow(10, Math.floor(Math.log10(x))); for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= x - 1e-9) return m * p; return 10 * p; };
-const gridOf = (pair) => ({ left: pair ? 52 : 56, right: pair ? 62 : 16, top: pair ? 16 : 44, bottom: 58 });
+const gridOf = (pair, w) => (w && w < 600 ? { left: pair ? 40 : 44, right: pair ? 48 : 8, top: pair ? 14 : 44, bottom: 58 } : { left: pair ? 52 : 56, right: pair ? 62 : 16, top: pair ? 16 : 44, bottom: 58 });
 const sumF = (F, k) => Q.map((_, i) => { let t = 0, any = false; for (const n in F[k]) { const v = F[k][n][i]; if (v != null) { t += v; any = true; } } return any ? t : null; });
 const fieldsOf = (office) => (office === ALL ? { sales: sumF(D.f, "sales"), legal: sumF(D.f, "legal"), con: sumF(D.f, "contract") } : { sales: D.f.sales[office], legal: D.f.legal[office], con: D.f.contract[office] });
 
@@ -397,8 +409,20 @@ class Block {
     }
     return { maxS, maxY, minY };
   }
+  /* ако най-високото число не се събира над стълба, добавяме още едно деление отгоре */
   axesFor(c) {
-    const { maxS, maxY, minY } = this.extent(c.ids), m = this.lblMode(c), ex = m.show ? (m.maxRows >= 3 ? 2 : m.maxRows > 1 ? 1 : 0) : 0, ids = c.ids;
+    const m = this.lblMode(c), S = this.S; let ex = m.show ? (m.maxRows >= 3 ? 2 : m.maxRows > 1 ? 1 : 0) : 0;
+    if (!m.show || !c.ids.some((id) => S.lab[id] && !S.hide[id])) return this.axesCalc(c, ex);
+    const H = c.el.clientHeight || 392, ph = H - gridOf(c.ids.length === 2, c.el.clientWidth).top - gridOf(c.ids.length === 2, c.el.clientWidth).bottom, { maxS, maxY } = this.extent(c.ids);
+    for (let t = 0; t < 3; t++) {
+      const ax = this.axesCalc(c, ex), tops = c.ids.length === 2 ? [maxS, maxY] : [this.sd(c.ids[0]).axis === 0 ? maxS : maxY];
+      if (ax.every((a, i) => ((a.max - tops[i]) / (a.max - a.min)) * ph >= m.fs + 9)) return ax;
+      ex++;
+    }
+    return this.axesCalc(c, ex);
+  }
+  axesCalc(c, ex) {
+    const { maxS, maxY, minY } = this.extent(c.ids), ids = c.ids;
     if (ids.length === 2) {
       const iL = niceStep(maxS / 5), nPos = Math.max(1, Math.ceil(maxS / iL - 1e-9)), negY = -minY;
       const iR = niceStep(Math.max(maxY / nPos, negY / 3, 1)), nNeg = negY > 0 ? Math.ceil(negY / iR - 1e-9) + ex : 0;
@@ -452,7 +476,7 @@ class Block {
      и вземаме първата, където не пада върху вече поставено число; ако няма място, числото се скрива. */
   placeLabels(c, mode) {
     const S = this.S, out = {}, pair = c.ids.length === 2, ax = this.axesFor(c), n = S.to - S.from + 1;
-    const w = c.el.clientWidth || 800, H = c.el.clientHeight || 392, g = gridOf(pair);
+    const w = c.el.clientWidth || 800, H = c.el.clientHeight || 392, g = gridOf(pair, w);
     const pw = w - g.left - g.right, ph = H - g.top - g.bottom, pitch = pw / n, band = pitch * 0.72, fs = mode.fs, placed = [];
     const bothBars = pair && S.kind[c.ids[0]] === "bar" && S.kind[c.ids[1]] === "bar";
     const bwS = Math.min(22, band / 2.3), bwY = Math.min(10, band / 2.3), tot = bwS + 0.3 * bwY + bwY;
@@ -533,7 +557,7 @@ class Block {
     const yAxis = pair ? [numAx(0, "right", true), pctAx(1, "left", false)] : isNum(ids[0]) ? [numAx(0, "left", true)] : [pctAx(0, "left", true)];
     return {
       animation: !reduce, animationDuration: 500, textStyle: { fontFamily: css("--font-ui") },
-      grid: gridOf(pair),
+      grid: gridOf(pair, c.el.clientWidth),
       tooltip: { trigger: "axis", axisPointer: { type: "line", lineStyle: { color: muted, type: "dashed" } }, backgroundColor: surf, borderColor: css("--line"), borderWidth: 1,
         textStyle: { color: ink, fontFamily: css("--font-ui"), fontSize: 12.5 }, extraCssText: "border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);", formatter: (ps) => this.tipHtml(c, ps) },
       xAxis: { type: "category", data: Q, boundaryGap: true, axisLine: { onZero: false, lineStyle: { color: css("--line") } }, axisTick: { show: false }, axisLabel: { color: muted, fontSize: 9, hideOverlap: true } },
@@ -703,12 +727,21 @@ function setLang(l) { LANG = l; try { localStorage.setItem("lang", l); } catch (
 $("langBtn").onclick = () => { if (TEXTS) setLang(LANG === "bg" ? "en" : "bg"); };
 $("themeBtn").onclick = () => { const t = isDark() ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("theme", t); } catch (e) {} if (TEXTS) paintShell(); };
 document.addEventListener("click", (e) => { closeMenus(); blocks.forEach((b) => { const pop = b.r("pop"); if (!pop.hidden && !pop.contains(e.target)) b.togglePop(false); }); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") { blocks.forEach((b) => b.togglePop(false)); closeMenus(); } });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { blocks.forEach((b) => b.togglePop(false)); closeMenus(); closeFly(); } });
+const fly = $("fly"), closeFly = () => { fly.hidden = true; };
+function openFly(btn) {
+  fly.innerHTML = "";
+  blocks.forEach((b) => { const x = document.createElement("button"); x.setAttribute("role", "menuitem"); x.textContent = T[b.p + ".title"]; x.onclick = (e) => { e.stopPropagation(); closeFly(); b.root.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); }; fly.append(x); });
+  const r = btn.getBoundingClientRect(), mob = matchMedia("(max-width: 760px)").matches;
+  fly.style.left = (mob ? Math.max(8, r.left) : r.right + 6) + "px"; fly.style.top = (mob ? r.bottom + 6 : r.top) + "px"; fly.hidden = false;
+}
 document.querySelectorAll(".nav").forEach((b) => (b.onclick = () => {
   document.querySelectorAll(".nav").forEach((x) => x.removeAttribute("aria-current")); b.setAttribute("aria-current", "page");
   ["agency", "bnb", "contacts"].forEach((v) => ($("v-" + v).hidden = v !== b.dataset.view));
-  if (b.dataset.view === "agency") blocks.forEach((bl) => bl.charts.forEach((c) => c.inst.resize()));
+  if (b.dataset.view === "agency") { blocks.forEach((bl) => bl.charts.forEach((c) => c.inst.resize())); if (blocks.length) { if (fly.hidden) openFly(b); else closeFly(); } } else closeFly();
 }));
+document.addEventListener("click", (e) => { if (!e.target.closest("#fly, .nav[data-view=agency]")) closeFly(); });
+window.addEventListener("resize", closeFly);
 const renderAll = () => blocks.forEach((b) => b.charts.length && b.render());
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { renderAll(); if (TEXTS) paintShell(); });
 new MutationObserver(renderAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
