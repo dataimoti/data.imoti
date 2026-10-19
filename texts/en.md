@@ -93,4 +93,4 @@ m.info2.p: The sum of two columns in the Registry Agency report: Contractual mor
 m.info3.h: Share of financed deals
 m.info3.p: (Statutory mortgages + Contractual mortgages) ÷ Sales × 100, for the same office and quarter.
 m.info4.h: Limitations
-m.info4.p: Mortgage data starts in 2006 Q2. This is a ratio of two separate counters in the report, not a tracking of individual deals: one purchase can have more than one mortgage, and a mortgage can be registered without a purchase. The share is therefore an approximate estimate of credit financing and can exceed 100%.
+m.info4.p: Mortgage data starts in 2006 Q2. This is a ratio of two separate counters in the report, not a tracking of individual deals: one purchase can have more than one mortgage, and a mortgage can be registered without a purchase. The share is therefore an approximate estimate of credit financing.
