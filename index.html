@@ -87,7 +87,7 @@ h1 { margin: 0 0 2px; font-size: 17px; line-height: 1.2; font-weight: 700; lette
 
 .charts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
 .charts.two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-.cv { position: relative; min-width: 0; height: 392px; }
+.cv { position: relative; min-width: 0; height: 392px; touch-action: pan-y; }
 .cap { position: absolute; left: 8px; top: 0; z-index: 1; display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; color: var(--ink2); pointer-events: none; }
 .cap i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--surface); }
@@ -283,6 +283,7 @@ function translit(s) {
 }
 const oName = (n) => (n === ALL ? T.allCountry : LANG === "en" ? translit(n) : n);
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const PHONE = matchMedia("(max-width: 760px)").matches, TOUCH = matchMedia("(pointer: coarse)").matches;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const niceStep = (x) => { if (!(x > 0)) return 1; const p = Math.pow(10, Math.floor(Math.log10(x))); for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= x - 1e-9) return m * p; return 10 * p; };
 const gridOf = (pair, w) => (w && w < 600 ? { left: pair ? 40 : 44, right: pair ? 48 : 8, top: pair ? 14 : 44, bottom: 58 } : { left: pair ? 52 : 56, right: pair ? 62 : 16, top: pair ? 16 : 44, bottom: 58 });
@@ -349,7 +350,7 @@ class Block {
   constructor(def, host) {
     this.def = def; this.p = def.key; this.charts = []; this.cur = null;
     this.S = { office: "София", from: 0, to: 0, split: false, kind: {}, hide: {}, lab: {}, avg: {} };
-    def.series.forEach((s) => { this.S.kind[s.id] = "bar"; this.S.hide[s.id] = false; this.S.lab[s.id] = true; this.S.avg[s.id] = false; });
+    def.series.forEach((s) => { this.S.kind[s.id] = "bar"; this.S.hide[s.id] = false; this.S.lab[s.id] = !PHONE; this.S.avg[s.id] = false; });
     this.root = document.createElement("div"); this.root.className = "block"; this.root.innerHTML = BLOCK_HTML; host.append(this.root);
     this.ro = new ResizeObserver(() => this.charts.forEach((c) => { c.inst.resize(); this.refresh(c); }));
     const r = (this.r = (n) => this.root.querySelector('[data-r="' + n + '"]'));
@@ -364,7 +365,7 @@ class Block {
   dual(c) { return c.ids.length === 2 && !this.def.shared; }
   togglePop(open) { const pop = this.r("pop"); pop.hidden = !open; this.r("infoBtn").setAttribute("aria-expanded", String(open)); }
   start() {
-    const S = this.S; S.from = Math.max(0, N - 40); S.to = N - 1;
+    const S = this.S; S.from = Math.max(0, N - (PHONE ? 20 : 40)); S.to = N - 1;
     if (!D.f.sales[S.office]) S.office = Object.keys(D.f.sales)[0];
     this.cur = this.def.calc(fieldsOf(S.office));
     this.paint(); this.fillSelects(); this.buildRows(); this.buildTable(); this.mount();
@@ -580,7 +581,7 @@ class Block {
           borderColor: css("--line"), backgroundColor: "transparent", fillerColor: "rgba(90,147,240,.16)", dataBackground: { lineStyle: { color: muted, width: 1 }, areaStyle: { color: css("--chip") } },
           selectedDataBackground: { lineStyle: { color: c1 }, areaStyle: { color: c1, opacity: .25 } }, handleSize: "120%", handleStyle: { color: surf, borderColor: ink2 },
           textStyle: { color: ink2, fontSize: 9 }, moveHandleSize: 6, labelFormatter: (v, str) => str },
-        { type: "inside", xAxisIndex: 0, filterMode: "filter", zoomOnMouseWheel: "ctrl", moveOnMouseMove: true, moveOnMouseWheel: false }
+        { type: "inside", xAxisIndex: 0, filterMode: "filter", zoomOnMouseWheel: "ctrl", moveOnMouseMove: true, moveOnMouseWheel: false, disabled: TOUCH }
       ],
       series: this.buildSeries(c)
     };
