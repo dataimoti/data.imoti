@@ -154,13 +154,13 @@ tbody tr:last-child td { border-bottom: 0; }
 
 @media (max-width: 760px) {
   .shell { grid-template-columns: 1fr; }
-  .rail { position: sticky; top: env(safe-area-inset-top, 0px); height: auto; flex-direction: row; justify-content: space-around; z-index: 6;
+  .rail { position: sticky; top: 0; height: auto; flex-direction: row; justify-content: space-around; z-index: 6;
     padding-block: 6px; padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px)); border-right: 0; border-bottom: 1px solid var(--line); }
   .lang { margin-top: 0; flex-direction: row; }
   .nav[data-view="contacts"] { margin-top: 0; }
   .nav { flex: 1; flex-direction: row; justify-content: center; gap: 8px; font-size: 11px; padding: 8px 6px; }
   .ic { width: 20px; height: 20px; }
-  .main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 16px; }
+  .main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 22px; }
   h1 { font-size: 18px; }
   .cv { height: 360px; }
   .main { padding-left: max(6px, env(safe-area-inset-left, 0px)); padding-right: max(6px, env(safe-area-inset-right, 0px)); }
@@ -173,7 +173,7 @@ tbody tr:last-child td { border-bottom: 0; }
   .charts.two { grid-template-columns: minmax(0, 1fr); }
   th.first, td.first { min-width: 150px; max-width: 150px; }
 }
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+html { scroll-padding-top: 76px; }
 </style>
 <script>try{var __t=localStorage.getItem("theme");if(__t==="dark"||__t==="light")document.documentElement.setAttribute("data-theme",__t)}catch(e){}</script>
 
@@ -572,16 +572,15 @@ class Block {
     return {
       animation: !reduce, animationDuration: 500, textStyle: { fontFamily: css("--font-ui") },
       grid: gridOf(pair, c.el.clientWidth),
-      tooltip: { trigger: "axis", axisPointer: { type: "line", lineStyle: { color: muted, type: "dashed" } }, backgroundColor: surf, borderColor: css("--line"), borderWidth: 1,
-        textStyle: { color: ink, fontFamily: css("--font-ui"), fontSize: 12.5 }, extraCssText: "border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);", formatter: (ps) => this.tipHtml(c, ps) },
+      tooltip: { trigger: "axis", axisPointer: { type: "line", lineStyle: { color: muted, type: "dashed" } }, backgroundColor: surf, borderColor: css("--line"), borderWidth: 1, confine: true,
+        textStyle: { color: ink, fontFamily: css("--font-ui"), fontSize: 12.5 }, extraCssText: "max-width:min(320px,92vw);white-space:normal;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);", formatter: (ps) => this.tipHtml(c, ps) },
       xAxis: { type: "category", data: Q, boundaryGap: true, axisLine: { onZero: false, lineStyle: { color: css("--line") } }, axisTick: { show: false }, axisLabel: { color: muted, fontSize: 9, hideOverlap: true } },
       yAxis,
       dataZoom: [
         { type: "slider", xAxisIndex: 0, startValue: S.from, endValue: S.to, height: 20, bottom: 4, filterMode: "filter", brushSelect: false, showDataShadow: true,
           borderColor: css("--line"), backgroundColor: "transparent", fillerColor: "rgba(90,147,240,.16)", dataBackground: { lineStyle: { color: muted, width: 1 }, areaStyle: { color: css("--chip") } },
           selectedDataBackground: { lineStyle: { color: c1 }, areaStyle: { color: c1, opacity: .25 } }, handleSize: "120%", handleStyle: { color: surf, borderColor: ink2 },
-          textStyle: { color: ink2, fontSize: 9 }, moveHandleSize: 6, labelFormatter: (v, str) => str },
-        { type: "inside", xAxisIndex: 0, filterMode: "filter", zoomOnMouseWheel: "ctrl", moveOnMouseMove: true, moveOnMouseWheel: false, disabled: TOUCH }
+          textStyle: { color: ink2, fontSize: 9 }, moveHandleSize: 6, labelFormatter: (v, str) => str }
       ],
       series: this.buildSeries(c)
     };
