@@ -627,7 +627,7 @@ class Block {
       const head = [T.quarter, ...vids.map((v) => this.nameOf(v) + " (" + this.unitOf(v) + ")")], rows = [];
       for (let i = S.from; i <= S.to; i++) rows.push([Q[i], ...vids.map((v) => cur[v][i] ?? "")]);
       if (kind === "xlsx") await save(xlsxBlob(head, rows, [0, ...vids.map((v) => (this.def.vt[v] === "num" ? 3 : 2))], T[this.p + ".title"]), this.fname(c) + ".xlsx");
-      else await save(new Blob(["﻿sep=,\r\n" + [head, ...rows].map((r) => r.map((v) => (typeof v === "string" && /[,;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v)).join(",")).join("\r\n")], { type: "text/csv;charset=utf-8" }), this.fname(c) + ".csv");
+      else await save(new Blob(["﻿" + [head, ...rows].map((r) => r.map((v) => (typeof v === "string" && /[,;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v)).join(",")).join("\r\n")], { type: "text/csv;charset=utf-8" }), this.fname(c) + ".csv");
     } catch (e) { console.error(e); flash(T.dlErr); }
   }
   makeDl(c) {
