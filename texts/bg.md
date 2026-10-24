@@ -83,7 +83,7 @@ download: Свали
 dlPng: Картинка (PNG)
 
 # Сваляне — Excel таблица
-dlXlsx: Таблица (Excel)
+dlXlsx: Таблица (XLSX)
 
 # Сваляне — CSV таблица
 dlCsv: Таблица (CSV)
