@@ -83,7 +83,7 @@ download: Download
 dlPng: Image (PNG)
 
 # Сваляне — Excel таблица
-dlXlsx: Table (Excel)
+dlXlsx: Table (XLSX)
 
 # Сваляне — CSV таблица
 dlCsv: Table (CSV)
