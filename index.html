@@ -354,7 +354,7 @@ class Block {
   constructor(def, host) {
     this.def = def; this.p = def.key; this.charts = []; this.cur = null;
     this.S = { office: "София", from: 0, to: 0, split: false, kind: {}, hide: {}, lab: {}, avg: {} };
-    def.series.forEach((s) => { this.S.kind[s.id] = "bar"; this.S.hide[s.id] = false; this.S.lab[s.id] = !PHONE; this.S.avg[s.id] = false; });
+    def.series.forEach((s) => { this.S.kind[s.id] = "bar"; this.S.hide[s.id] = false; this.S.lab[s.id] = true; this.S.avg[s.id] = false; });
     this.root = document.createElement("div"); this.root.className = "block"; this.root.innerHTML = BLOCK_HTML; host.append(this.root);
     this.ro = new ResizeObserver(() => this.charts.forEach((c) => { c.inst.resize(); this.refresh(c); }));
     const r = (this.r = (n) => this.root.querySelector('[data-r="' + n + '"]'));
@@ -369,7 +369,7 @@ class Block {
   dual(c) { return c.ids.length === 2 && !this.def.shared; }
   togglePop(open) { const pop = this.r("pop"); pop.hidden = !open; this.r("infoBtn").setAttribute("aria-expanded", String(open)); }
   start() {
-    const S = this.S; S.from = Math.max(0, N - (PHONE ? 20 : 40)); S.to = N - 1;
+    const S = this.S; S.from = Math.max(0, N - (PHONE ? 12 : 40)); S.to = N - 1;
     if (!D.f.sales[S.office]) S.office = Object.keys(D.f.sales)[0];
     this.cur = this.def.calc(fieldsOf(S.office));
     this.paint(); this.fillSelects(); this.buildRows(); this.buildTable(); this.mount();
@@ -401,7 +401,7 @@ class Block {
     [...top4, ...rest].forEach((n) => D.f.sales[n] && so.add(new Option(oName(n), n)));
     so.value = this.S.office; this.fit(so);
     const pr = this.r("presets"); pr.innerHTML = "";
-    [[T.p1, 4], [T.p5, 20], [T.p10, 40], [T.pAll, N]].forEach(([tx, n]) => {
+    [[T.p1, 4], [T.p3, 12], [T.p5, 20], [T.p10, 40], [T.pAll, N]].forEach(([tx, n]) => {
       const b = document.createElement("button"); b.className = "chip"; b.textContent = tx; b.dataset.n = n; b.setAttribute("aria-pressed", "false");
       b.onclick = () => this.setWindow(Math.max(0, N - n), N - 1, true); pr.append(b);
     });
@@ -731,12 +731,12 @@ function xlsxBlob(head, rows, fmts, sheet) {
 const BNB_DEFS = [
   { key: "b1", file: "bnb-gpr", dec: 2, unit: "%", src: "Ir",
     series: [{ id: "hou", col: "--s1", f: "aprc_hh_m" }, { id: "con", col: "--s2", f: "aprc_hh_c" }] },
+  { key: "b4", file: "bnb-portfel", dec: 0, unit: "m", div: 1000, src: "Cred",
+    series: [{ id: "nfc", col: "--s3", f: "l_nfc_1000", lp: "bottom" }, { id: "con", col: "--s2", f: "l_hh_c_1000", lp: "bottom" }, { id: "hou", col: "--s1", f: "l_hh_m_1000", lp: "top" }] },
   { key: "b2", file: "bnb-novi-krediti", dec: 1, unit: "m", src: "Ir",
     series: [{ id: "hou", col: "--s1", f: "l_nb_hh_m" }, { id: "con", col: "--s2", f: "l_nb_hh_c" }] },
   { key: "b3", file: "bnb-novi-krediti-promyana", dec: 1, unit: "%", sign: true, src: "Ir",
-    series: [{ id: "hou", col: "--s1", f: "l_nb_hh_m_yoy" }, { id: "con", col: "--s2", f: "l_nb_hh_c_yoy" }] },
-  { key: "b4", file: "bnb-portfel", dec: 0, unit: "m", div: 1000, src: "Cred",
-    series: [{ id: "nfc", col: "--s3", f: "l_nfc_1000", lp: "bottom" }, { id: "con", col: "--s2", f: "l_hh_c_1000", lp: "bottom" }, { id: "hou", col: "--s1", f: "l_hh_m_1000", lp: "top" }] }
+    series: [{ id: "hou", col: "--s1", f: "l_nb_hh_m_yoy" }, { id: "con", col: "--s2", f: "l_nb_hh_c_yoy" }] }
 ];
 let BD = { m: [], f: {} }, bnbBlocks = [], bnbState = "idle";
 const allBlocks = () => [...blocks, ...bnbBlocks];
@@ -799,7 +799,7 @@ class BnbBlock {
   get N() { return BD.m.length; }
   togglePop(open) { const pop = this.r("pop"); pop.hidden = !open; this.r("infoBtn").setAttribute("aria-expanded", String(open)); }
   start() {
-    const S = this.S, N = this.N; S.from = Math.max(0, N - 36); S.to = N - 1;
+    const S = this.S, N = this.N; S.from = Math.max(0, N - (PHONE ? 12 : 36)); S.to = N - 1;
     this.def.series.forEach((s) => { this.cur[s.id] = BD.f[s.f] ? BD.f[s.f].map((v) => (v == null ? null : v / (this.def.div || 1))) : new Array(N).fill(null); });
     this.repaint();
   }
