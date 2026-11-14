@@ -592,3 +592,24 @@ b7.info2.h: How it is calculated
 b7.info2.p: Calculated in the database for each month: bad and restructured loans ÷ total loans × 100, for the same segment (charts 4 and 6).
 b7.info3.h: Source and notes
 b7.info3.p: BNB data (in EUR thousand). The definition of bad loans changed in February 2018, so the series has a break. The peak in November 2014 coincides with the revocation of the licence of Corporate Commercial Bank (KTB).
+
+# ===== Contacts =====
+cTitle: About the site
+cAbout1: imotidata.com automatically collects data from official sources, such as the Registry Agency, the Bulgarian National Bank and the National Statistical Institute, and presents it in charts and tables for quick and easy analysis.
+cAbout2: The site is informational and aims to make public information from official sources easy to access. The data is indicative and is not financial or legal advice.
+cAbout3: The project is independent, free of charge and not affiliated with the institutions mentioned.
+cFormTitle: Write to us
+cFormSub: Questions, reports or suggestions? Get in touch using the contact form.
+cName: Name
+cEmail: E-mail for reply
+cMsg: Message
+cConsent: I agree that my data (name and e-mail) is used only to reply to this message.
+cSend: Send
+cSending: Sending…
+cDone: Thank you! Your message was sent successfully.
+cErrFill: Enter a valid e-mail and a message of at least 10 characters.
+cErrOk: Tick the consent box to send the message.
+cErrSend: Your message was NOT sent. Please try again in a moment.
+cReq: Required field
+cErrLong: The message is too long. The maximum is 2000 characters.
+cCount: Message too long:

@@ -154,6 +154,28 @@ tbody tr:last-child td { border-bottom: 0; }
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 20; background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 10px; font-size: 10.5px; }
 .msg { padding: 40px 16px; text-align: center; color: var(--ink2); }
 .msg code { display: block; margin-top: 8px; font-family: var(--font-num); font-size: 10px; color: var(--muted); word-break: break-word; }
+.about, .formcard { max-width: 720px; padding: 16px 18px; margin-bottom: 14px; }
+.about p { margin: 0 0 10px; font-size: 12.5px; line-height: 1.55; color: var(--ink); max-width: 65ch; }
+.about p:last-child { margin-bottom: 0; }
+.formcard h2 { margin: 0 0 4px; font-size: 14px; font-weight: 700; }
+.fnote { margin: 0 0 14px; font-size: 10.5px; color: var(--ink2); }
+.fld { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.fld label { font-size: 10.5px; font-weight: 600; color: var(--ink2); }
+.fld input, .fld textarea { font: inherit; font-size: 12.5px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; width: 100%; box-sizing: border-box; }
+.req { color: #d92d20; font-weight: 700; }
+.reqnote { margin: 0 0 12px; font-size: 10.5px; color: var(--ink2); }
+.ccount { font-size: 10.5px; color: #d92d20; font-weight: 600; }
+.fld textarea { resize: vertical; min-height: 110px; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.chk { display: flex; align-items: flex-start; gap: 8px; font-size: 10.5px; color: var(--ink2); margin-bottom: 14px; }
+.chk input { margin-top: 2px; }
+.frow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.send { height: 32px; padding: 0 18px; border: 1px solid var(--ink); border-radius: 8px; background: var(--ink); color: var(--surface); font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; }
+.send:disabled { opacity: .5; cursor: default; }
+.cst { margin: 14px 0 0; padding: 11px 14px; border-radius: 8px; border: 1px solid var(--line); border-left-width: 4px; font-size: 12px; font-weight: 600; line-height: 1.45; color: var(--ink); background: var(--chip); }
+.cst.ok { border-color: #1e8a5b; background: rgba(30,138,91,.12); }
+.cst.err { border-color: #d92d20; background: rgba(217,45,32,.10); }
+.cst.wait { border-color: var(--muted); font-weight: 500; }
 .coming { padding: 40px 24px; text-align: center; color: var(--ink2); }
 
 @media (max-width: 760px) {
@@ -199,7 +221,25 @@ html { scroll-padding-top: 76px; }
     </div>
 
     <div id="v-bnb" hidden><div id="bnbBlocks"></div></div>
-    <div id="v-contacts" hidden><div class="card coming" id="c-contacts"></div></div>
+    <div id="v-contacts" hidden>
+      <div class="block">
+        <h1 data-i18n="cTitle"></h1>
+        <section class="card about"><p data-i18n="cAbout1"></p><p data-i18n="cAbout2"></p><p data-i18n="cAbout3"></p></section>
+        <section class="card formcard">
+          <h2 data-i18n="cFormTitle"></h2><p class="fnote" data-i18n="cFormSub"></p>
+          <form id="cForm" novalidate>
+            <div class="fld"><label for="cName" data-i18n="cName"></label><input id="cName" name="name" maxlength="100" autocomplete="name" required></div>
+            <div class="fld"><label for="cEmail"><span data-i18n="cEmail"></span> <b class="req" aria-hidden="true">*</b></label><input id="cEmail" name="email" type="email" maxlength="200" autocomplete="email" required></div>
+            <div class="fld"><label for="cMsg"><span data-i18n="cMsg"></span> <b class="req" aria-hidden="true">*</b></label><textarea id="cMsg" name="message" rows="6" required></textarea><div id="cCount" class="ccount" hidden></div></div>
+            <div class="hp" aria-hidden="true"><label for="cWeb">Website</label><input id="cWeb" name="website" tabindex="-1" autocomplete="off"></div>
+            <label class="chk"><input type="checkbox" id="cOk"><span data-i18n="cConsent"></span></label>
+            <p class="reqnote"><b class="req">*</b> <span data-i18n="cReq"></span></p>
+            <div class="frow"><button type="submit" class="send" data-i18n="cSend"></button></div>
+            <div id="cStatus" class="cst" role="status" aria-live="polite" hidden></div>
+          </form>
+        </section>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -212,7 +252,7 @@ html { scroll-padding-top: 76px; }
    URL и публичният ключ са във файла config.js (до index.html). Сайтът ТЕГЛИ данните само от базата.
    Текстовете са в папка texts/ (bg.md и en.md) и се редактират като обикновен текст. */
 const CONFIG = Object.assign({
-  supabaseUrl: "", anonKey: "", table: "vpisvania", bnbTable: "bnb",
+  supabaseUrl: "", anonKey: "", table: "vpisvania", bnbTable: "bnb", messagesTable: "messages",
   cols: { office: "Служба по вписванията", sales: "Продажби", legal: "Законни ипотеки", contract: "Договорни ипотеки", deleted: "Заличени ипотеки", lien: "Възбрани", lienDel: "Заличени възбрани", year: "Година", quarter: "Тримесечие" }
 }, window.APP_CONFIG || {});
 const FIELDS = ["sales", "legal", "contract", "deleted", "lien", "lienDel"];
@@ -1026,7 +1066,7 @@ async function ensureBnb() {
 function paintShell() {
   document.documentElement.lang = LANG; document.title = T.pageTitle;
   document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = T[el.dataset.i18n]));
-  $("c-contacts").textContent = T.navContacts + ". " + T.comingSoon;
+  document.querySelectorAll("[data-ph]").forEach((el) => (el.placeholder = T[el.dataset.ph]));
   document.querySelectorAll(".ic").forEach((el) => el.style.setProperty("--m", 'url("' + ICONS[el.dataset.icon] + '")'));
   const lb = $("langBtn"); lb.innerHTML = LANG === "bg" ? FLAG_EN : FLAG_BG; lb.title = lb.ariaLabel = T.langTo;
   const tb = $("themeBtn"); tb.title = tb.ariaLabel = isDark() ? T.themeToLight : T.themeToDark;
@@ -1038,6 +1078,27 @@ function showMsg(txt, isErr, extra, hostId) {
   if (extra) { const s = document.createElement("code"); s.textContent = extra; d.append(s); }
   h.append(d);
 }
+const MSG_MAX = 2000;
+$("cMsg").addEventListener("input", () => { const n = $("cMsg").value.length, c = $("cCount"); c.hidden = n <= MSG_MAX; c.textContent = T.cCount + " " + n + " / " + MSG_MAX; });
+/* контактна форма: записва съобщението в таблицата messages (само insert, без четене от сайта) */
+$("cForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const st = $("cStatus"), btn = e.target.querySelector(".send"), say = (k, kind) => { st.textContent = (kind === "ok" ? "✓ " : kind === "err" ? "✕ " : "") + T[k]; st.className = "cst " + (kind || "wait"); st.hidden = false; st.scrollIntoView({ block: "nearest", behavior: "smooth" }); };
+  const name = $("cName").value.trim(), email = $("cEmail").value.trim(), message = $("cMsg").value.trim();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || message.length < 10) return say("cErrFill", "err");
+  if (message.length > MSG_MAX) return say("cErrLong", "err");
+  if (!$("cOk").checked) return say("cErrOk", "err");
+  if ($("cWeb").value) return say("cDone", "ok");   /* скритото поле е капан за ботове: правим се, че е изпратено */
+  if (!(CONFIG.supabaseUrl && CONFIG.anonKey)) return say("cErrSend", "err");
+  btn.disabled = true; btn.textContent = T.cSending; say("cSending");
+  try {
+    const res = await fetch(CONFIG.supabaseUrl.replace(/\/$/, "") + "/rest/v1/" + CONFIG.messagesTable, {
+      method: "POST", headers: { apikey: CONFIG.anonKey, Authorization: "Bearer " + CONFIG.anonKey, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ name, email, message, lang: LANG }) });
+    if (!res.ok) throw new Error("Supabase " + res.status);
+    e.target.reset(); $("cCount").hidden = true; say("cDone", "ok"); btn.textContent = T.cSend; setTimeout(() => (btn.disabled = false), 30000);
+  } catch (err) { console.error(err); btn.disabled = false; btn.textContent = T.cSend; say("cErrSend", "err"); }
+});
 function setLang(l) { LANG = l; try { localStorage.setItem("lang", l); } catch (e) {} setT(); paintShell(); allBlocks().forEach((b) => b.repaint()); }
 $("langBtn").onclick = () => { if (TEXTS) setLang(LANG === "bg" ? "en" : "bg"); };
 $("themeBtn").onclick = () => { const t = isDark() ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("theme", t); } catch (e) {} if (TEXTS) paintShell(); };
