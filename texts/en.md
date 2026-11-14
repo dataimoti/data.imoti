@@ -489,3 +489,21 @@ b2.info1.h: What it shows
 b2.info1.p: The total amount of loans to households granted during the month (new business), in EUR million. It shows how active lending is, regardless of the debt already accumulated.
 b2.info2.h: Source and notes
 b2.info2.p: BNB data, monthly, in euro. Monthly volumes are uneven through the year; use periods of 5+ years or the average line to see the trend.
+
+b3.title: New household loans – annual change
+b3.sub: Change in the volume of new loans versus the same month a year earlier, in percent.
+b3.table: Values by month
+b3.unit: % vs same month a year earlier
+b3.ul: %
+b3.chartOne: Chart:
+b3.chartPair: Chart of the annual change of new housing and consumer loans by month
+b3.hou.name: New housing loans: change vs same month a year earlier
+b3.hou.short: Housing
+b3.hou.row: New housing loans, change (%)
+b3.con.name: New consumer loans: change vs same month a year earlier
+b3.con.short: Consumer
+b3.con.row: New consumer loans, change (%)
+b3.info1.h: What it shows
+b3.info1.p: How many percent more or fewer loans were granted in the month compared with the same month a year earlier (chart 2). A positive value means growth, a negative one a decline.
+b3.info2.h: How it is calculated
+b3.info2.p: Calculated in the database from the monthly volumes: (volume this month ÷ volume in the same month last year − 1) × 100. There is no comparison data for 2007. Month-on-same-month changes are volatile; use the average line and longer periods for a clearer picture.

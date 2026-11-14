@@ -731,7 +731,9 @@ const BNB_DEFS = [
   { key: "b1", file: "bnb-gpr", dec: 2, unit: "%", src: "Ir",
     avg: true, series: [{ id: "hou", col: "--s1", f: "aprc_hh_m" }, { id: "con", col: "--s2", f: "aprc_hh_c" }] },
   { key: "b2", file: "bnb-novi-krediti", dec: 1, unit: "m", avg: true, src: "Ir",
-    series: [{ id: "hou", col: "--s1", f: "l_nb_hh_m" }, { id: "con", col: "--s2", f: "l_nb_hh_c" }] }
+    series: [{ id: "hou", col: "--s1", f: "l_nb_hh_m" }, { id: "con", col: "--s2", f: "l_nb_hh_c" }] },
+  { key: "b3", file: "bnb-novi-krediti-promyana", dec: 1, unit: "%", avg: true, sign: true, kind: "bar", src: "Ir",
+    series: [{ id: "hou", col: "--s1", f: "l_nb_hh_m_yoy" }, { id: "con", col: "--s2", f: "l_nb_hh_c_yoy" }] }
 ];
 let BD = { m: [], f: {} }, bnbBlocks = [], bnbState = "idle";
 const allBlocks = () => [...blocks, ...bnbBlocks];
@@ -750,7 +752,7 @@ async function loadBnb() {
 function bnbFmt(def, v) {
   if (v == null) return "–";
   const r = +v.toFixed(def.dec), [a, b] = Math.abs(r).toFixed(def.dec).split("."), en = LANG === "en";
-  const s = (r < 0 ? "−" : "") + a.replace(/\B(?=(\d{3})+(?!\d))/g, en ? "," : " ") + (b ? (en ? "." : ",") + b : "");
+  const s = (r < 0 ? "−" : def.sign && r > 0 ? "+" : "") + a.replace(/\B(?=(\d{3})+(?!\d))/g, en ? "," : " ") + (b ? (en ? "." : ",") + b : "");
   return def.unit === "%" ? s + " %" : s;
 }
 const bnbAx = (def, v) => { const s = String(+v.toFixed(2)).replace(".", LANG === "en" ? "." : ","); return def.unit === "%" ? s + "%" : s; };
@@ -780,7 +782,7 @@ class BnbBlock {
   constructor(def, host) {
     this.def = def; this.p = def.key; this.charts = []; this.cur = {};
     this.S = { from: 0, to: 0, split: false, kind: {}, hide: {}, lab: {}, avg: {} };
-    def.series.forEach((s) => { this.S.kind[s.id] = "line"; this.S.hide[s.id] = false; this.S.lab[s.id] = false; this.S.avg[s.id] = !!def.avg; });
+    def.series.forEach((s) => { this.S.kind[s.id] = def.kind || "line"; this.S.hide[s.id] = false; this.S.lab[s.id] = false; this.S.avg[s.id] = !!def.avg; });
     this.root = document.createElement("div"); this.root.className = "block"; this.root.innerHTML = BNB_HTML; host.append(this.root);
     this.ro = new ResizeObserver(() => this.charts.forEach((c) => { c.inst.resize(); this.refresh(c); }));
     const r = (this.r = (n) => this.root.querySelector('[data-r="' + n + '"]'));
