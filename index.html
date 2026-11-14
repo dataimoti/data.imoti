@@ -23,6 +23,7 @@
   --s1: #2b6cdf;
   --s1b: #9dbdf2;
   --s2: #cc650f;
+  --s3: #2f8f6b;
   --focus: #2b6cdf;
   --font-ui: "Manrope", "Segoe UI", system-ui, sans-serif;
   --font-num: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
@@ -30,13 +31,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #121316; --divider: #5a5e66; --rail: #121316; --surface: #1a1b1f; --ink: #ececee; --ink2: #a6abb3; --muted: #7b808a;
-    --line: #2d2f35; --line2: #24262b; --chip: #25272c; --chip2: #33363d; --dash: #43464e; --s1: #5a93f0; --s1b: #a9c6f8; --s2: #d57a22; --focus: #5a93f0;
+    --line: #2d2f35; --line2: #24262b; --chip: #25272c; --chip2: #33363d; --dash: #43464e; --s1: #5a93f0; --s1b: #a9c6f8; --s2: #d57a22; --s3: #3fb58a; --focus: #5a93f0;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #121316; --divider: #5a5e66; --rail: #121316; --surface: #1a1b1f; --ink: #ececee; --ink2: #a6abb3; --muted: #7b808a;
-  --line: #2d2f35; --line2: #24262b; --chip: #25272c; --chip2: #33363d; --dash: #43464e; --s1: #5a93f0; --s1b: #a9c6f8; --s2: #d57a22; --focus: #5a93f0;
+  --line: #2d2f35; --line2: #24262b; --chip: #25272c; --chip2: #33363d; --dash: #43464e; --s1: #5a93f0; --s1b: #a9c6f8; --s2: #d57a22; --s3: #3fb58a; --focus: #5a93f0;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -733,7 +734,9 @@ const BNB_DEFS = [
   { key: "b2", file: "bnb-novi-krediti", dec: 1, unit: "m", src: "Ir",
     series: [{ id: "hou", col: "--s1", f: "l_nb_hh_m" }, { id: "con", col: "--s2", f: "l_nb_hh_c" }] },
   { key: "b3", file: "bnb-novi-krediti-promyana", dec: 1, unit: "%", sign: true, src: "Ir",
-    series: [{ id: "hou", col: "--s1", f: "l_nb_hh_m_yoy" }, { id: "con", col: "--s2", f: "l_nb_hh_c_yoy" }] }
+    series: [{ id: "hou", col: "--s1", f: "l_nb_hh_m_yoy" }, { id: "con", col: "--s2", f: "l_nb_hh_c_yoy" }] },
+  { key: "b4", file: "bnb-portfel", dec: 0, unit: "m", div: 1000, src: "Cred",
+    series: [{ id: "nfc", col: "--s3", f: "l_nfc_1000", lp: "bottom" }, { id: "con", col: "--s2", f: "l_hh_c_1000", lp: "bottom" }, { id: "hou", col: "--s1", f: "l_hh_m_1000", lp: "top" }] }
 ];
 let BD = { m: [], f: {} }, bnbBlocks = [], bnbState = "idle";
 const allBlocks = () => [...blocks, ...bnbBlocks];
@@ -797,7 +800,7 @@ class BnbBlock {
   togglePop(open) { const pop = this.r("pop"); pop.hidden = !open; this.r("infoBtn").setAttribute("aria-expanded", String(open)); }
   start() {
     const S = this.S, N = this.N; S.from = Math.max(0, N - 36); S.to = N - 1;
-    this.def.series.forEach((s) => { this.cur[s.id] = BD.f[s.f] || new Array(N).fill(null); });
+    this.def.series.forEach((s) => { this.cur[s.id] = BD.f[s.f] ? BD.f[s.f].map((v) => (v == null ? null : v / (this.def.div || 1))) : new Array(N).fill(null); });
     this.repaint();
   }
   repaint() { this.paint(); this.buildRows(); this.buildTable(); this.mount(); }
@@ -869,9 +872,9 @@ class BnbBlock {
       /* при линия етикетите на първата серия са над линията, на втората под нея; всеки е на едно от 3 нива по височина */
       const other = c.ids.find((x) => x !== id), last = S.to;
       const data = kind === "line" ? arr.map((v, i) => {
-        let pos = k % 2 === 0 ? "top" : "bottom";
+        let pos = sd.lp || (k % 2 === 0 ? "top" : "bottom");
         /* най-новата стойност: по-високата точка е горе, по-ниската долу; текстът започва от точката и върви надясно */
-        if (i === last && other != null && this.cur[other][i] != null && v != null && this.cur[other][i] !== v) pos = v > this.cur[other][i] ? "top" : "bottom";
+        if (i === last && c.ids.length === 2 && other != null && this.cur[other][i] != null && v != null && this.cur[other][i] !== v) pos = v > this.cur[other][i] ? "top" : "bottom";
         const newest = i > last - 3;
         return { value: v, label: newest
           ? (i === last ? { position: pos, distance: 5, align: "left" } : { position: pos, distance: 5 })

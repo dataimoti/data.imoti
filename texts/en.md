@@ -508,3 +508,24 @@ b3.info1.h: What it shows
 b3.info1.p: How many percent more or fewer loans were granted in the month compared with the same month a year earlier (chart 2). A positive value means growth, a negative one a decline.
 b3.info2.h: How it is calculated
 b3.info2.p: Calculated in the database from the monthly volumes: (volume this month ÷ volume in the same month last year − 1) × 100. There is no comparison data for 2007. Month-on-same-month changes are volatile; use the average line and longer periods for a clearer picture.
+
+b4.title: Size of the loan portfolio
+b4.sub: Outstanding loans at the end of the month: non-financial corporations, households – consumer and housing.
+b4.table: Values by month
+b4.unit: EUR m, outstanding at month end
+b4.ul: EUR m
+b4.chartOne: Chart:
+b4.chartPair: Chart of the size of the loan portfolio by month
+b4.nfc.name: Non-financial corporations – loans
+b4.nfc.short: Non-financial corporations
+b4.nfc.row: Non-financial corporations, loans (EUR m)
+b4.con.name: Households – consumer loans
+b4.con.short: Consumer
+b4.con.row: Households, consumer loans (EUR m)
+b4.hou.name: Households – housing loans
+b4.hou.short: Housing
+b4.hou.row: Households, housing loans (EUR m)
+b4.info1.h: What it shows
+b4.info1.p: How much outstanding credit there is at the end of each month – in total for non-financial corporations and separately consumer and housing loans to households. It includes performing and bad (restructured) loans.
+b4.info2.h: Source and notes
+b4.info2.p: BNB data (table "Loans to non-financial corporations, financial corporations, households and NPISH, residents of Bulgaria", in EUR thousand). Shown here in EUR million; stored in EUR thousand in the database. Corporate loans exclude overdrafts. The series contains breaks in late 2014 and 2015 whose cause is not established.
