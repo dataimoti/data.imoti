@@ -119,6 +119,7 @@ officeLabel: Registry office
 p1: 1 y
 
 # Бърз период — 5 години
+p3: 3 y
 p5: 5 y
 
 # Бърз период — 10 години

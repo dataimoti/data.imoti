@@ -796,7 +796,7 @@ class BnbBlock {
   get N() { return BD.m.length; }
   togglePop(open) { const pop = this.r("pop"); pop.hidden = !open; this.r("infoBtn").setAttribute("aria-expanded", String(open)); }
   start() {
-    const S = this.S, N = this.N; S.from = Math.max(0, N - (PHONE ? 36 : 60)); S.to = N - 1;
+    const S = this.S, N = this.N; S.from = Math.max(0, N - 36); S.to = N - 1;
     this.def.series.forEach((s) => { this.cur[s.id] = BD.f[s.f] || new Array(N).fill(null); });
     this.repaint();
   }
@@ -814,7 +814,7 @@ class BnbBlock {
     const a = document.createElement("a"); a.href = T["bnbSrc" + this.def.src + "Url"]; a.target = "_blank"; a.rel = "noopener"; a.textContent = T["bnbSrc" + this.def.src + "Label"];
     const q = document.createElement("p"); q.style.marginTop = "10px"; q.append(a); pop.append(q);
     const pr = r("presets"); pr.innerHTML = "";
-    [[T.p1, 12], [T.p5, 60], [T.p10, 120], [T.pAll, N]].forEach(([tx, n]) => {
+    [[T.p1, 12], [T.p3, 36], [T.p5, 60], [T.p10, 120], [T.pAll, N]].forEach(([tx, n]) => {
       const b = document.createElement("button"); b.className = "chip"; b.textContent = tx; b.dataset.n = n; b.setAttribute("aria-pressed", "false");
       b.onclick = () => this.setWindow(Math.max(0, N - n), N - 1); pr.append(b);
     });
@@ -866,12 +866,20 @@ class BnbBlock {
         if (av != null) ml.push({ yAxis: av, lineStyle: { type: "dashed", color, width: 1.6 }, label: { show: true, position: "insideStartTop", color: ink, fontSize: 9, fontWeight: 400, fontFamily: mono, formatter: () => T.avg + ": " + this.fv(av) } });
       }
       const k = def.series.findIndex((x) => x.id === id);
-      /* при линия етикетите се редуват горе/долу; най-дясната видима точка е „горе“ за първата серия, „долу“ за втората */
-      const data = kind === "line" ? arr.map((v, i) => ({ value: v, label: { position: (S.to - i + k) % 2 === 0 ? "top" : "bottom" } })) : arr;
+      /* при линия етикетите на първата серия са над линията, на втората под нея; всеки е на едно от 3 нива по височина */
+      const other = c.ids.find((x) => x !== id), last = S.to;
+      const data = kind === "line" ? arr.map((v, i) => {
+        let pos = k % 2 === 0 ? "top" : "bottom";
+        /* най-новата стойност: по-високата точка е горе, по-ниската долу; текстът започва от точката и върви надясно */
+        if (i === last && other != null && this.cur[other][i] != null && v != null && this.cur[other][i] !== v) pos = v > this.cur[other][i] ? "top" : "bottom";
+        const newest = i > last - 3;
+        return { value: v, label: newest
+          ? (i === last ? { position: pos, distance: 5, align: "left" } : { position: pos, distance: 5 })
+          : { position: pos, distance: 4 + ((last - i) % 3) * 12 } };
+      }) : arr;
       const base = {
         id, name: this.nameOf(id), data, silent: hid, animation: !reduce, emphasis: { disabled: true },
         label: { show: !hid && S.lab[id] && n <= 60, position: "top", fontFamily: mono, fontSize: 8.5, fontWeight: 400, color: ink, formatter: (p) => this.fv(p.value).replace(" %", "") },
-        labelLayout: { hideOverlap: true },
         markLine: { silent: true, symbol: "none", animation: false, label: { show: false }, data: ml }
       };
       if (kind === "bar") return { ...base, type: "bar", barMaxWidth: 14, barCategoryGap: "30%", itemStyle: { color, opacity: hid ? 0 : 1, borderRadius: [2, 2, 0, 0] } };
@@ -893,7 +901,7 @@ class BnbBlock {
     const w = (c && c.el.clientWidth) || 800, phone = w < 600, anyBar = def.series.filter((s) => c.ids.includes(s.id)).some((s) => S.kind[s.id] === "bar");
     return {
       animation: !reduce, animationDuration: 500, textStyle: { fontFamily: css("--font-ui") },
-      grid: { left: phone ? 40 : 52, right: phone ? 12 : 20, top: 18, bottom: 58 },
+      grid: { left: phone ? 40 : 52, right: phone ? 30 : 48, top: 18, bottom: 58 },
       tooltip: { trigger: "axis", axisPointer: { type: "line", lineStyle: { color: muted, type: "dashed" } }, backgroundColor: surf, borderColor: css("--line"), borderWidth: 1, confine: true,
         textStyle: { color: ink, fontFamily: css("--font-ui"), fontSize: 12.5 }, extraCssText: "max-width:min(320px,92vw);white-space:normal;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);", formatter: (ps) => this.tipHtml(ps, c) },
       xAxis: { type: "category", data: BD.m, boundaryGap: anyBar, axisLine: { onZero: false, lineStyle: { color: css("--line") } }, axisTick: { show: false }, axisLabel: { color: muted, fontSize: 9, hideOverlap: true } },
