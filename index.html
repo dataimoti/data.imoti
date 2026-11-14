@@ -155,7 +155,10 @@ tbody tr:last-child td { border-bottom: 0; }
 .msg { padding: 40px 16px; text-align: center; color: var(--ink2); }
 .msg code { display: block; margin-top: 8px; font-family: var(--font-num); font-size: 10px; color: var(--muted); word-break: break-word; }
 .about, .formcard { max-width: 720px; padding: 16px 18px; margin-bottom: 14px; }
-.about p { margin: 0 0 10px; font-size: 12.5px; line-height: 1.55; color: var(--ink); max-width: 65ch; }
+#v-contacts .block { padding-left: 28px; }
+#v-contacts .about, #v-contacts .formcard { max-width: 760px; width: 100%; box-sizing: border-box; }
+#v-contacts .about { margin-top: 16px; }
+.about p { margin: 0 0 10px; font-size: 12.5px; line-height: 1.55; color: var(--ink); }
 .about p:last-child { margin-bottom: 0; }
 .formcard h2 { margin: 0 0 4px; font-size: 14px; font-weight: 700; }
 .fnote { margin: 0 0 14px; font-size: 10.5px; color: var(--ink2); }
@@ -165,7 +168,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .req { color: #d92d20; font-weight: 700; }
 .reqnote { margin: 0 0 12px; font-size: 10.5px; color: var(--ink2); }
 .ccount { font-size: 10.5px; color: #d92d20; font-weight: 600; }
-.fld textarea { resize: vertical; min-height: 110px; }
+.fld textarea { resize: vertical; min-height: 165px; }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .chk { display: flex; align-items: flex-start; gap: 8px; font-size: 10.5px; color: var(--ink2); margin-bottom: 14px; }
 .chk input { margin-top: 2px; }
@@ -179,6 +182,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .coming { padding: 40px 24px; text-align: center; color: var(--ink2); }
 
 @media (max-width: 760px) {
+  #v-contacts .block { padding-left: 0; }
   .shell { grid-template-columns: 1fr; }
   .rail { position: sticky; top: 0; height: auto; flex-direction: row; justify-content: space-around; z-index: 6;
     padding-block: 6px; padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px)); border-right: 0; border-bottom: 1px solid var(--line); }
@@ -230,7 +234,7 @@ html { scroll-padding-top: 76px; }
           <form id="cForm" novalidate>
             <div class="fld"><label for="cName" data-i18n="cName"></label><input id="cName" name="name" maxlength="100" autocomplete="name" required></div>
             <div class="fld"><label for="cEmail"><span data-i18n="cEmail"></span> <b class="req" aria-hidden="true">*</b></label><input id="cEmail" name="email" type="email" maxlength="200" autocomplete="email" required></div>
-            <div class="fld"><label for="cMsg"><span data-i18n="cMsg"></span> <b class="req" aria-hidden="true">*</b></label><textarea id="cMsg" name="message" rows="6" required></textarea><div id="cCount" class="ccount" hidden></div></div>
+            <div class="fld"><label for="cMsg"><span data-i18n="cMsg"></span> <b class="req" aria-hidden="true">*</b></label><textarea id="cMsg" name="message" rows="9" required></textarea><div id="cCount" class="ccount" hidden></div></div>
             <div class="hp" aria-hidden="true"><label for="cWeb">Website</label><input id="cWeb" name="website" tabindex="-1" autocomplete="off"></div>
             <label class="chk"><input type="checkbox" id="cOk"><span data-i18n="cConsent"></span></label>
             <p class="reqnote"><b class="req">*</b> <span data-i18n="cReq"></span></p>
