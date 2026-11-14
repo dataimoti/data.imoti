@@ -549,3 +549,46 @@ b5.info2.h: Why these rates matter
 b5.info2.p: The weighted average rate (the orange line) is the basis of the variable part of the interest on many variable-rate loans. UBB, for example, sets its reference interest rate (RLP) for new euro loans to individuals (contracts after 22 December 2025) exactly as the weighted average of the interest rates on euro deposits of households and non-financial corporations with a maturity of over 1 day to 2 years, published by the BNB and weighted by volume. The loan rate is the RLP plus a fixed margin set in the contract. The RLP is recalculated on 1 March and 1 September and rounded to two decimals; if negative it is taken as 0. Older variable-rate loans, including the BGN mortgages, use the bank's earlier methodology (from 2016), in which this rate is one component among others. For euro business loans after 26 June 2026, UBB uses the same basis but recalculates it every month. These are UBB's terms; other banks have their own.
 b5.info3.h: How it is calculated
 b5.info3.p: The rates refer to outstanding amounts, i.e. all existing deposits, not only new ones. The weighted average is calculated in the database: (corporate rate × corporate volume + household rate × household volume) ÷ total volume. The first line (households, 3–6 months) is for comparison.
+
+b6.title: Bad and restructured loans
+b6.sub: Outstanding bad and restructured loans at the end of the month: non-financial corporations, households – consumer and housing.
+b6.table: Values by month
+b6.unit: EUR m, outstanding at month end
+b6.ul: EUR m
+b6.chartOne: Chart:
+b6.chartPair: Chart of bad and restructured loans by month
+b6.nfc.name: Non-financial corporations – bad and restructured loans
+b6.nfc.short: Non-financial corporations
+b6.nfc.row: Non-financial corporations, bad and restructured loans (EUR m)
+b6.con.name: Households – bad and restructured consumer loans
+b6.con.short: Consumer
+b6.con.row: Households, bad and restructured consumer loans (EUR m)
+b6.hou.name: Households – bad and restructured housing loans
+b6.hou.short: Housing
+b6.hou.row: Households, bad and restructured housing loans (EUR m)
+b6.info1.h: What it shows
+b6.info1.p: How much of the loans at month end are bad or restructured: loans that banks report as non-performing or whose terms were changed because of the borrower's difficulties.
+b6.info2.h: Source and notes
+b6.info2.p: BNB data (table "Loans to non-financial corporations, financial corporations, households and NPISH, residents of Bulgaria", in EUR thousand). Shown here in EUR million; stored in EUR thousand in the database. The definition of bad loans changed in February 2018, so the series has a break. The sharp change in November 2014 coincides with the revocation of the licence of Corporate Commercial Bank (KTB).
+b7.title: Share of bad and restructured loans
+b7.sub: Bad and restructured loans as a percentage of all loans: non-financial corporations, households – consumer and housing.
+b7.table: Values by month
+b7.unit: % of total loans
+b7.ul: %
+b7.chartOne: Chart:
+b7.chartPair: Chart of the share of bad and restructured loans by month
+b7.nfc.name: Non-financial corporations – share of bad and restructured loans
+b7.nfc.short: Non-financial corporations
+b7.nfc.row: Non-financial corporations, share of bad loans (%)
+b7.con.name: Households – share of bad and restructured consumer loans
+b7.con.short: Consumer
+b7.con.row: Households, consumer loans, share of bad loans (%)
+b7.hou.name: Households – share of bad and restructured housing loans
+b7.hou.short: Housing
+b7.hou.row: Households, housing loans, share of bad loans (%)
+b7.info1.h: What it shows
+b7.info1.p: What part of all loans in each segment is bad or restructured. It makes riskier segments easier to see, regardless of the size of their portfolio.
+b7.info2.h: How it is calculated
+b7.info2.p: Calculated in the database for each month: bad and restructured loans ÷ total loans × 100, for the same segment (charts 4 and 6).
+b7.info3.h: Source and notes
+b7.info3.p: BNB data (in EUR thousand). The definition of bad loans changed in February 2018, so the series has a break. The peak in November 2014 coincides with the revocation of the licence of Corporate Commercial Bank (KTB).

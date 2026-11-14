@@ -738,7 +738,11 @@ const BNB_DEFS = [
   { key: "b3", file: "bnb-novi-krediti-promyana", dec: 1, unit: "%", sign: true, src: "Ir",
     series: [{ id: "hou", col: "--s1", f: "l_nb_hh_m_yoy" }, { id: "con", col: "--s2", f: "l_nb_hh_c_yoy" }] },
   { key: "b5", file: "bnb-lihvi-depoziti", dec: 2, unit: "%", src: "Ir",
-    series: [{ id: "hh36", col: "--s1", f: "d_i_hh_3m6m" }, { id: "w", col: "--s2", f: "d_i_hhnfc_1d2y" }] }
+    series: [{ id: "hh36", col: "--s1", f: "d_i_hh_3m6m" }, { id: "w", col: "--s2", f: "d_i_hhnfc_1d2y" }] },
+  { key: "b6", file: "bnb-loshi-krediti", dec: 1, unit: "m", div: 1000, src: "Cred",
+    series: [{ id: "nfc", col: "--s3", f: "lb_nfc_1000", lp: "top" }, { id: "con", col: "--s2", f: "lb_hh_c_1000", lp: "bottom" }, { id: "hou", col: "--s1", f: "lb_hh_m_1000", lp: "top" }] },
+  { key: "b7", file: "bnb-dyal-loshi-krediti", dec: 2, unit: "%", src: "Cred",
+    series: [{ id: "nfc", col: "--s3", f: "lb_nfc_share", lp: "top" }, { id: "con", col: "--s2", f: "lb_hh_c_share", lp: "bottom" }, { id: "hou", col: "--s1", f: "lb_hh_m_share", lp: "top" }] }
 ];
 let BD = { m: [], f: {} }, bnbBlocks = [], bnbState = "idle";
 const allBlocks = () => [...blocks, ...bnbBlocks];
