@@ -872,7 +872,7 @@ class BnbBlock {
         markLine: { silent: true, symbol: "none", animation: false, label: { show: false }, data: ml }
       };
       if (kind === "bar") return { ...base, type: "bar", barMaxWidth: 14, barCategoryGap: "30%", itemStyle: { color, opacity: hid ? 0 : 1, borderRadius: [2, 2, 0, 0] } };
-      return { ...base, type: "line", symbol: "circle", symbolSize: 5, showSymbol: n <= 36, connectNulls: false, lineStyle: { width: 2, color, opacity: hid ? 0 : 1 }, itemStyle: { color, borderColor: surf, borderWidth: 1.2, opacity: hid ? 0 : 1 } };
+      return { ...base, type: "line", symbol: "circle", symbolSize: n <= 36 ? 5 : 3, showSymbol: n <= 36 || (S.lab[id] && !hid), connectNulls: false, lineStyle: { width: 2, color, opacity: hid ? 0 : 1 }, itemStyle: { color, borderColor: surf, borderWidth: 1.2, opacity: hid ? 0 : 1 } };
     });
   }
   tipHtml(ps, c) {
