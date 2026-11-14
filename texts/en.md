@@ -455,6 +455,7 @@ bnbSourceUrl: https://www.bnb.bg/Statistics/StMonetaryInterestRateStatistics/ind
 b1.title: Annual percentage rate of charge (APRC) on new loans
 b1.sub: Average APRC on new household loans – housing and consumer, by month.
 b1.table: Values by month
+b1.ul: %
 b1.unit: % per year
 b1.chartPair: Chart of APRC on housing and consumer loans by month
 b1.hou.name: Housing loans (house purchase)
@@ -467,3 +468,20 @@ b1.info1.h: What it shows
 b1.info1.p: The average annual percentage rate of charge (APRC) on loans to households in euro newly granted during the month. APRC includes interest and loan fees, so it is a fuller measure than the headline interest rate.
 b1.info2.h: Source and notes
 b1.info2.p: BNB data, monthly. The series may contain breaks (e.g. November 2014 and December 2015) whose cause is not established.
+
+b2.title: New household loans – volumes
+b2.sub: Volume of loans to households newly granted during the month, in euro – housing and consumer.
+b2.table: Values by month
+b2.unit: EUR m per month
+b2.ul: EUR m
+b2.chartPair: Chart of new housing and consumer loan volumes by month
+b2.hou.name: New housing loans
+b2.hou.short: Housing
+b2.hou.row: New housing loans (EUR m)
+b2.con.name: New consumer loans
+b2.con.short: Consumer
+b2.con.row: New consumer loans (EUR m)
+b2.info1.h: What it shows
+b2.info1.p: The total amount of loans to households granted during the month (new business), in EUR million. It shows how active lending is, regardless of the debt already accumulated.
+b2.info2.h: Source and notes
+b2.info2.p: BNB data, monthly, in euro. Monthly volumes are uneven through the year; use periods of 5+ years or the average line to see the trend.

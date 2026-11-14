@@ -729,7 +729,9 @@ function xlsxBlob(head, rows, fmts, sheet) {
    series: id (за текстовете), col (цвят), f (колона в таблицата). dec = цифри след запетаята. */
 const BNB_DEFS = [
   { key: "b1", file: "bnb-gpr", dec: 2, unit: "%",
-    series: [{ id: "hou", col: "--s1", f: "aprc_hh_m" }, { id: "con", col: "--s2", f: "aprc_hh_c" }] }
+    avg: true, series: [{ id: "hou", col: "--s1", f: "aprc_hh_m" }, { id: "con", col: "--s2", f: "aprc_hh_c" }] },
+  { key: "b2", file: "bnb-novi-krediti", dec: 1, unit: "m", avg: true,
+    series: [{ id: "hou", col: "--s1", f: "l_nb_hh_m" }, { id: "con", col: "--s2", f: "l_nb_hh_c" }] }
 ];
 let BD = { m: [], f: {} }, bnbBlocks = [], bnbState = "idle";
 const allBlocks = () => [...blocks, ...bnbBlocks];
@@ -773,7 +775,7 @@ class BnbBlock {
   constructor(def, host) {
     this.def = def; this.p = def.key; this.c = null; this.cur = {};
     this.S = { from: 0, to: 0, kind: {}, hide: {}, lab: {}, avg: {} };
-    def.series.forEach((s) => { this.S.kind[s.id] = "line"; this.S.hide[s.id] = false; this.S.lab[s.id] = false; this.S.avg[s.id] = false; });
+    def.series.forEach((s) => { this.S.kind[s.id] = "line"; this.S.hide[s.id] = false; this.S.lab[s.id] = false; this.S.avg[s.id] = !!def.avg; });
     this.root = document.createElement("div"); this.root.className = "block"; this.root.innerHTML = BNB_HTML; host.append(this.root);
     this.ro = new ResizeObserver(() => { if (this.c) { this.c.inst.resize(); this.refresh(); } });
     const r = (this.r = (n) => this.root.querySelector('[data-r="' + n + '"]'));
@@ -826,7 +828,7 @@ class BnbBlock {
     this.def.series.forEach((sd) => {
       const k = sd.id, name = this.nameOf(k), row = document.createElement("div"); row.className = "srow";
       row.innerHTML = '<span class="dot" style="background:var(' + sd.col + ')"></span><span class="nm"></span><div class="tools"></div>';
-      const nm = row.querySelector(".nm"); nm.append(name); const sm = document.createElement("small"); sm.textContent = "(" + this.def.unit + ")"; nm.append(sm);
+      const nm = row.querySelector(".nm"); nm.append(name); const sm = document.createElement("small"); sm.textContent = "(" + T[this.p + ".ul"] + ")"; nm.append(sm);
       const tools = row.querySelector(".tools");
       const add = (icon, title, pressed, fn) => { const b = document.createElement("button"); b.className = "tool"; b.innerHTML = icon; b.title = title; b.setAttribute("aria-label", name + ": " + title); b.setAttribute("aria-pressed", String(pressed)); b.onclick = fn; tools.append(b); };
       add(ICON.bar, T.labBar, S.kind[k] === "bar", () => { S.kind[k] = "bar"; this.buildRows(); this.render(); });
@@ -925,7 +927,7 @@ class BnbBlock {
     try {
       const S = this.S, def = this.def, M = BD.m;
       if (kind === "png") { await save(await this.exportPng(), this.fname() + ".png"); return; }
-      const head = [T.bnbMonth, ...def.series.map((s) => this.nameOf(s.id) + " (" + def.unit + ")")], rows = [];
+      const head = [T.bnbMonth, ...def.series.map((s) => this.nameOf(s.id) + " (" + T[this.p + ".ul"] + ")")], rows = [];
       for (let i = S.from; i <= S.to; i++) rows.push([M[i], ...def.series.map((s) => this.cur[s.id][i] ?? "")]);
       if (kind === "xlsx") await save(xlsxBlob(head, rows, [0, ...def.series.map(() => BNB_STYLE[def.dec] ?? 4)], T[this.p + ".title"]), this.fname() + ".xlsx");
       else await save(new Blob(["﻿" + [head, ...rows].map((r) => r.map((v) => (typeof v === "string" && /[,;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v)).join(",")).join("\r\n")], { type: "text/csv;charset=utf-8" }), this.fname() + ".csv");
