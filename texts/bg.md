@@ -447,14 +447,17 @@ v.info4.p: Заличени възбрани има от 2009 Q2; преди т�
 
 # ===== БНБ =====
 bnbMonth: Месец
-bnbSourceLabel: Източник: БНБ – статистика на лихвите
-bnbSourceUrl: https://www.bnb.bg/Statistics/StMonetaryInterestRateStatistics/index.htm
+bnbSrcIrLabel: Източник: БНБ – лихвена статистика (s_ir_all_tables)
+bnbSrcIrUrl: https://www.bnb.bg/Statistics/StMonetaryInterestRate/StInterestRate/StIRInterestRate/index.htm
+bnbSrcCredLabel: Източник: БНБ – кредити (s_cred_ms_bg)
+bnbSrcCredUrl: https://www.bnb.bg/Statistics/StMonetaryInterestRate/StMonetaryStatistics/index.htm
 
 b1.title: Годишен процент на разходите (ГПР) по нови кредити
 b1.sub: Среден ГПР по нови кредити на домакинствата – жилищни и потребителски, по месеци.
 b1.table: Стойности по месеци
 b1.ul: %
 b1.unit: % годишно
+b1.chartOne: Графика:
 b1.chartPair: Графика на ГПР по жилищни и потребителски кредити по месеци
 b1.hou.name: Жилищни кредити (за покупка на жилище)
 b1.hou.short: Жилищни
@@ -472,6 +475,7 @@ b2.sub: Обем на новоотпуснатите през месеца кр�
 b2.table: Стойности по месеци
 b2.unit: млн. евро на месец
 b2.ul: млн. евро
+b2.chartOne: Графика:
 b2.chartPair: Графика на обемите на новите жилищни и потребителски кредити по месеци
 b2.hou.name: Нови жилищни кредити
 b2.hou.short: Жилищни

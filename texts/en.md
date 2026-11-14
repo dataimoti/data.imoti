@@ -449,14 +449,17 @@ v.info4.p: Removed liens are available from 2009 Q2; before that the column is e
 
 # ===== BNB =====
 bnbMonth: Month
-bnbSourceLabel: Source: Bulgarian National Bank – interest rate statistics
-bnbSourceUrl: https://www.bnb.bg/Statistics/StMonetaryInterestRateStatistics/index.htm
+bnbSrcIrLabel: Source: BNB – interest rate statistics (s_ir_all_tables)
+bnbSrcIrUrl: https://www.bnb.bg/Statistics/StMonetaryInterestRate/StInterestRate/StIRInterestRate/index.htm
+bnbSrcCredLabel: Source: BNB – loans (s_cred_ms_bg)
+bnbSrcCredUrl: https://www.bnb.bg/Statistics/StMonetaryInterestRate/StMonetaryStatistics/index.htm
 
 b1.title: Annual percentage rate of charge (APRC) on new loans
 b1.sub: Average APRC on new household loans – housing and consumer, by month.
 b1.table: Values by month
 b1.ul: %
 b1.unit: % per year
+b1.chartOne: Chart:
 b1.chartPair: Chart of APRC on housing and consumer loans by month
 b1.hou.name: Housing loans (house purchase)
 b1.hou.short: Housing
@@ -474,6 +477,7 @@ b2.sub: Volume of loans to households newly granted during the month, in euro �
 b2.table: Values by month
 b2.unit: EUR m per month
 b2.ul: EUR m
+b2.chartOne: Chart:
 b2.chartPair: Chart of new housing and consumer loan volumes by month
 b2.hou.name: New housing loans
 b2.hou.short: Housing
