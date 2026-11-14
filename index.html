@@ -197,7 +197,7 @@ html { scroll-padding-top: 76px; }
      <div id="blocks"></div>
     </div>
 
-    <div id="v-bnb" hidden><div class="card coming" id="c-bnb"></div></div>
+    <div id="v-bnb" hidden><div id="bnbBlocks"></div></div>
     <div id="v-contacts" hidden><div class="card coming" id="c-contacts"></div></div>
   </main>
 </div>
@@ -211,7 +211,7 @@ html { scroll-padding-top: 76px; }
    URL и публичният ключ са във файла config.js (до index.html). Сайтът ТЕГЛИ данните само от базата.
    Текстовете са в папка texts/ (bg.md и en.md) и се редактират като обикновен текст. */
 const CONFIG = Object.assign({
-  supabaseUrl: "", anonKey: "", table: "vpisvania",
+  supabaseUrl: "", anonKey: "", table: "vpisvania", bnbTable: "bnb",
   cols: { office: "Служба по вписванията", sales: "Продажби", legal: "Законни ипотеки", contract: "Договорни ипотеки", deleted: "Заличени ипотеки", lien: "Възбрани", lienDel: "Заличени възбрани", year: "Година", quarter: "Тримесечие" }
 }, window.APP_CONFIG || {});
 const FIELDS = ["sales", "legal", "contract", "deleted", "lien", "lienDel"];
@@ -360,7 +360,7 @@ class Block {
     r("vOne").onclick = () => { if (this.S.split) { this.S.split = false; this.mount(); } };
     r("vTwo").onclick = () => { if (!this.S.split) { this.S.split = true; this.mount(); } };
     r("office").onchange = (e) => { this.S.office = e.target.value; this.loadOffice(); };
-    r("infoBtn").onclick = (e) => { e.stopPropagation(); closeMenus(); blocks.forEach((b) => b !== this && b.togglePop(false)); this.togglePop(r("pop").hidden); };
+    r("infoBtn").onclick = (e) => { e.stopPropagation(); closeMenus(); allBlocks().forEach((b) => b !== this && b.togglePop(false)); this.togglePop(r("pop").hidden); };
     this.nameOf = (id) => T[this.p + "." + id + ".name"]; this.shortOf = (id) => T[this.p + "." + id + ".short"];
     this.unitOf = (id) => (this.def.vt[id] === "num" ? T.unitCount : "%");
     this.sd = (id) => this.def.series.find((s) => s.id === id);
@@ -635,7 +635,7 @@ class Block {
     const b = document.createElement("button"); b.className = "dl"; b.setAttribute("aria-haspopup", "true"); b.setAttribute("aria-expanded", "false"); b.append(T.download); b.insertAdjacentHTML("beforeend", ICON.dl);
     const m = document.createElement("div"); m.className = "dlmenu"; m.hidden = true;
     [["png", T.dlPng], ["xlsx", T.dlXlsx], ["csv", T.dlCsv]].forEach(([k, tx]) => { const x = document.createElement("button"); x.dataset.dl = k; x.textContent = tx; m.append(x); });
-    b.onclick = (e) => { e.stopPropagation(); blocks.forEach((bl) => bl.togglePop(false)); const open = m.hidden; closeMenus(); m.hidden = !open; b.setAttribute("aria-expanded", String(open)); };
+    b.onclick = (e) => { e.stopPropagation(); allBlocks().forEach((bl) => bl.togglePop(false)); const open = m.hidden; closeMenus(); m.hidden = !open; b.setAttribute("aria-expanded", String(open)); };
     m.onclick = (e) => { const k = e.target.dataset.dl; if (!k) return; closeMenus(); this.doDownload(k, c); };
     w.append(b, m); return w;
   }
@@ -718,47 +718,312 @@ function xlsxBlob(head, rows, fmts, sheet) {
     ["_rels/.rels", X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
     ["xl/workbook.xml", X + "<workbook " + NS + ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="' + esc(sheet).slice(0, 31) + '" sheetId="1" r:id="rId1"/></sheets></workbook>'],
     ["xl/_rels/workbook.xml.rels", X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
-    ["xl/styles.xml", X + "<styleSheet " + NS + '><numFmts count="1"><numFmt numFmtId="164" formatCode="0.0"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment wrapText="1" vertical="center"/></xf><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="3" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'],
+    ["xl/styles.xml", X + "<styleSheet " + NS + '><numFmts count="2"><numFmt numFmtId="164" formatCode="0.0"/><numFmt numFmtId="165" formatCode="0.00"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment wrapText="1" vertical="center"/></xf><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="3" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'],
     ["xl/worksheets/sheet1.xml", X + "<worksheet " + NS + '><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>' + cols + "</cols><sheetData>" + hr + br + "</sheetData></worksheet>"]
   ]);
+}
+
+
+/* ============ БНБ: ГРАФИКИ (месечни данни от таблицата bnb) ============
+   Нова графика = ново описание в BNB_DEFS + текстове с префикса на ключа в texts/bg.md и texts/en.md.
+   series: id (за текстовете), col (цвят), f (колона в таблицата). dec = цифри след запетаята. */
+const BNB_DEFS = [
+  { key: "b1", file: "bnb-gpr", dec: 2, unit: "%",
+    series: [{ id: "hou", col: "--s1", f: "aprc_hh_m" }, { id: "con", col: "--s2", f: "aprc_hh_c" }] }
+];
+let BD = { m: [], f: {} }, bnbBlocks = [], bnbState = "idle";
+const allBlocks = () => [...blocks, ...bnbBlocks];
+
+async function loadBnb() {
+  const url = CONFIG.supabaseUrl.replace(/\/$/, "") + "/rest/v1/" + CONFIG.bnbTable + "?select=*&order=date.asc&limit=1000";
+  const res = await fetch(url, { headers: { apikey: CONFIG.anonKey, Authorization: "Bearer " + CONFIG.anonKey } });
+  if (!res.ok) throw new Error("Supabase " + res.status + ": " + (await res.text()).slice(0, 200));
+  const rows = await res.json();
+  if (!rows.length) throw new Error("0 rows (RLS / table name?)");
+  const f = {};
+  Object.keys(rows[0]).filter((k) => k !== "id" && k !== "date").forEach((k) => { f[k] = rows.map((r) => (r[k] == null ? null : Number(r[k]))); });
+  return { m: rows.map((r) => String(r.date).slice(0, 7)), f };
+}
+/* число с нужния брой цифри; за "%" се добавя " %" */
+function bnbFmt(def, v) {
+  if (v == null) return "–";
+  const r = +v.toFixed(def.dec), [a, b] = Math.abs(r).toFixed(def.dec).split("."), en = LANG === "en";
+  const s = (r < 0 ? "−" : "") + a.replace(/\B(?=(\d{3})+(?!\d))/g, en ? "," : " ") + (b ? (en ? "." : ",") + b : "");
+  return def.unit === "%" ? s + " %" : s;
+}
+const bnbAx = (def, v) => { const s = String(+v.toFixed(2)).replace(".", LANG === "en" ? "." : ","); return def.unit === "%" ? s + "%" : s; };
+const BNB_STYLE = { 0: 3, 1: 2, 2: 4 };   /* стил в xlsx според цифрите след запетаята */
+
+const BNB_HTML = `
+  <h1 data-r="title"></h1>
+  <p class="sub" data-r="sub"></p>
+  <section class="card"><div class="plot">
+    <div class="head">
+      <div class="titles"><span class="period" data-r="unitLbl"></span></div>
+      <div class="hright"><div data-r="dlSlot"></div><button class="info-btn" data-r="infoBtn" aria-expanded="false">!</button></div>
+      <div class="pop" data-r="pop" role="dialog" hidden></div>
+    </div>
+    <div class="ctrl"><span class="period" data-r="range"></span><div class="presets" data-r="presets"></div></div>
+    <div class="charts" data-r="charts"></div>
+    <div class="rows" data-r="rows"></div>
+  </div></section>
+  <section class="card tablecard"><div class="thead"><h2 data-r="tableTitle"></h2></div><div class="scroll"><table data-r="tbl"></table></div></section>`;
+
+class BnbBlock {
+  constructor(def, host) {
+    this.def = def; this.p = def.key; this.c = null; this.cur = {};
+    this.S = { from: 0, to: 0, kind: {}, hide: {}, lab: {}, avg: {} };
+    def.series.forEach((s) => { this.S.kind[s.id] = "line"; this.S.hide[s.id] = false; this.S.lab[s.id] = false; this.S.avg[s.id] = false; });
+    this.root = document.createElement("div"); this.root.className = "block"; this.root.innerHTML = BNB_HTML; host.append(this.root);
+    this.ro = new ResizeObserver(() => { if (this.c) { this.c.inst.resize(); this.refresh(); } });
+    const r = (this.r = (n) => this.root.querySelector('[data-r="' + n + '"]'));
+    r("infoBtn").onclick = (e) => { e.stopPropagation(); closeMenus(); allBlocks().forEach((b) => b !== this && b.togglePop(false)); this.togglePop(r("pop").hidden); };
+    this.nameOf = (id) => T[this.p + "." + id + ".name"]; this.shortOf = (id) => T[this.p + "." + id + ".short"];
+    this.sd = (id) => this.def.series.find((s) => s.id === id);
+    this.fv = (v) => bnbFmt(this.def, v);
+  }
+  get N() { return BD.m.length; }
+  togglePop(open) { const pop = this.r("pop"); pop.hidden = !open; this.r("infoBtn").setAttribute("aria-expanded", String(open)); }
+  start() {
+    const S = this.S, N = this.N; S.from = Math.max(0, N - (PHONE ? 60 : 120)); S.to = N - 1;
+    this.def.series.forEach((s) => { this.cur[s.id] = BD.f[s.f] || new Array(N).fill(null); });
+    this.repaint();
+  }
+  repaint() { this.paint(); this.buildRows(); this.buildTable(); this.mount(); }
+
+  /* ---------- текстове и бутони за период ---------- */
+  paint() {
+    const r = this.r, p = this.p, N = this.N;
+    r("title").textContent = T[p + ".title"]; r("sub").textContent = T[p + ".sub"]; r("tableTitle").textContent = T[p + ".table"]; r("unitLbl").textContent = T[p + ".unit"];
+    r("infoBtn").setAttribute("aria-label", T.infoBtn); r("pop").setAttribute("aria-label", T.infoBtn);
+    const pop = r("pop"); pop.textContent = "";
+    const h3 = document.createElement("h3"); h3.textContent = T.infoTitle; pop.append(h3);
+    for (let i = 1; i < 9 && (p + ".info" + i + ".h") in TEXTS[LANG]; i++) { const a = document.createElement("h4"); a.textContent = T[p + ".info" + i + ".h"]; const q = document.createElement("p"); q.textContent = T[p + ".info" + i + ".p"]; pop.append(a, q); }
+    const a = document.createElement("a"); a.href = T.bnbSourceUrl; a.target = "_blank"; a.rel = "noopener"; a.textContent = T.bnbSourceLabel;
+    const q = document.createElement("p"); q.style.marginTop = "10px"; q.append(a); pop.append(q);
+    const pr = r("presets"); pr.innerHTML = "";
+    [[T.p1, 12], [T.p5, 60], [T.p10, 120], [T.pAll, N]].forEach(([tx, n]) => {
+      const b = document.createElement("button"); b.className = "chip"; b.textContent = tx; b.dataset.n = n; b.setAttribute("aria-pressed", "false");
+      b.onclick = () => this.setWindow(Math.max(0, N - n), N - 1); pr.append(b);
+    });
+  }
+  syncControls() {
+    const S = this.S, N = this.N, M = BD.m;
+    this.root.querySelectorAll(".presets .chip").forEach((c) => c.setAttribute("aria-pressed", String(S.to === N - 1 && S.to - S.from + 1 === Math.min(N, +c.dataset.n))));
+    this.r("range").textContent = M[S.from] + " – " + M[S.to];
+    this.root.querySelectorAll("[data-col]").forEach((el) => el.classList.toggle("out", +el.dataset.col < S.from || +el.dataset.col > S.to));
+  }
+  setWindow(i, j, origin) {
+    const S = this.S; if (i > j) [i, j] = [j, i];
+    S.from = Math.max(0, i); S.to = Math.min(this.N - 1, j);
+    this.syncControls(); this.refresh();
+    if (this.c && origin !== this.c) this.c.inst.dispatchAction({ type: "dataZoom", dataZoomIndex: 0, startValue: S.from, endValue: S.to });
+  }
+
+  /* ---------- редове под графиката ---------- */
+  buildRows() {
+    const wrap = this.r("rows"), S = this.S; wrap.innerHTML = "";
+    this.def.series.forEach((sd) => {
+      const k = sd.id, name = this.nameOf(k), row = document.createElement("div"); row.className = "srow";
+      row.innerHTML = '<span class="dot" style="background:var(' + sd.col + ')"></span><span class="nm"></span><div class="tools"></div>';
+      const nm = row.querySelector(".nm"); nm.append(name); const sm = document.createElement("small"); sm.textContent = "(" + this.def.unit + ")"; nm.append(sm);
+      const tools = row.querySelector(".tools");
+      const add = (icon, title, pressed, fn) => { const b = document.createElement("button"); b.className = "tool"; b.innerHTML = icon; b.title = title; b.setAttribute("aria-label", name + ": " + title); b.setAttribute("aria-pressed", String(pressed)); b.onclick = fn; tools.append(b); };
+      add(ICON.bar, T.labBar, S.kind[k] === "bar", () => { S.kind[k] = "bar"; this.buildRows(); this.render(); });
+      add(ICON.line, T.labLine, S.kind[k] === "line", () => { S.kind[k] = "line"; this.buildRows(); this.render(); });
+      add(ICON.tag, S.lab[k] ? T.tagOn : T.tagOff, S.lab[k], () => { S.lab[k] = !S.lab[k]; this.buildRows(); this.refresh(); });
+      add(ICON.avg, S.avg[k] ? T.avgOn : T.avgOff, S.avg[k], () => { S.avg[k] = !S.avg[k]; this.buildRows(); this.refresh(); });
+      add(S.hide[k] ? ICON.eyeoff : ICON.eye, S.hide[k] ? T.show : T.hide, S.hide[k], () => this.toggleHide(k));
+      wrap.append(row);
+    });
+  }
+  toggleHide(k) { this.S.hide[k] = !this.S.hide[k]; this.buildRows(); this.buildTable(); this.render(); }
+
+  /* ---------- графика ---------- */
+  avgOf(id) {
+    const arr = this.cur[id], S = this.S; let sum = 0, cnt = 0;
+    for (let i = S.from; i <= S.to; i++) if (arr[i] != null) { sum += arr[i]; cnt++; }
+    return cnt ? sum / cnt : null;
+  }
+  buildSeries() {
+    const { S, def } = this, n = S.to - S.from + 1, surf = css("--surface"), ink = css("--ink"), mono = css("--font-num");
+    return def.series.map((sd) => {
+      const id = sd.id, color = css(sd.col), kind = S.kind[id], hid = S.hide[id], arr = this.cur[id], ml = [];
+      if (S.avg[id] && !hid) {
+        const av = this.avgOf(id);
+        if (av != null) ml.push({ yAxis: av, lineStyle: { type: "dashed", color, width: 1.6 }, label: { show: true, position: "insideStartTop", color: ink, fontSize: 9, fontWeight: 400, fontFamily: mono, formatter: () => T.avg + ": " + this.fv(av) } });
+      }
+      const base = {
+        id, name: this.nameOf(id), data: arr, silent: hid, animation: !reduce, emphasis: { disabled: true },
+        label: { show: !hid && S.lab[id] && n <= 60, position: "top", fontFamily: mono, fontSize: 8.5, fontWeight: 400, color: ink, formatter: (p) => this.fv(p.value).replace(" %", "") },
+        labelLayout: { hideOverlap: true },
+        markLine: { silent: true, symbol: "none", animation: false, label: { show: false }, data: ml }
+      };
+      if (kind === "bar") return { ...base, type: "bar", barMaxWidth: 14, barCategoryGap: "30%", itemStyle: { color, opacity: hid ? 0 : 1, borderRadius: [2, 2, 0, 0] } };
+      return { ...base, type: "line", symbol: "circle", symbolSize: 5, showSymbol: n <= 36, connectNulls: false, lineStyle: { width: 2, color, opacity: hid ? 0 : 1 }, itemStyle: { color, borderColor: surf, borderWidth: 1.2, opacity: hid ? 0 : 1 } };
+    });
+  }
+  tipHtml(ps) {
+    const { S, def } = this, ink2 = css("--ink2"), mono = css("--font-num"), M = BD.m, i = M.indexOf(ps[0].axisValue); if (i < 0) return "";
+    const dot = (col) => '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:' + col + ';margin-right:6px"></span>';
+    const row = (d, name, val, extra) => '<div style="display:flex;align-items:center;gap:8px;justify-content:space-between;min-width:200px' + (extra || "") + '"><span>' + d + name + '</span><b style="font-family:' + mono + '">' + val + "</b></div>";
+    let html = '<div style="font-weight:700;margin-bottom:6px">' + M[i] + "</div>";
+    def.series.filter((s) => !S.hide[s.id]).forEach((s) => { html += row(dot(css(s.col)), this.shortOf(s.id), this.fv(this.cur[s.id][i])); });
+    const avgRows = def.series.filter((s) => S.avg[s.id] && !S.hide[s.id] && this.avgOf(s.id) != null).map((s) =>
+      row('<span style="display:inline-block;width:18px;height:2px;background:repeating-linear-gradient(90deg,' + css(s.col) + ' 0 5px,transparent 5px 8px);margin-right:6px;vertical-align:middle"></span>', T.avg + " – " + this.shortOf(s.id), this.fv(this.avgOf(s.id)), ";color:" + ink2)).join("");
+    return html + (avgRows ? '<div style="border-top:1px solid ' + css("--line") + ';margin:6px 0 4px"></div>' + avgRows : "");
+  }
+  option() {
+    const S = this.S, def = this.def, muted = css("--muted"), line = css("--line2"), surf = css("--surface"), ink = css("--ink"), ink2 = css("--ink2"), c1 = css("--s1");
+    const w = (this.c && this.c.el.clientWidth) || 800, phone = w < 600, anyBar = def.series.some((s) => S.kind[s.id] === "bar");
+    return {
+      animation: !reduce, animationDuration: 500, textStyle: { fontFamily: css("--font-ui") },
+      grid: { left: phone ? 40 : 52, right: phone ? 12 : 20, top: 18, bottom: 58 },
+      tooltip: { trigger: "axis", axisPointer: { type: "line", lineStyle: { color: muted, type: "dashed" } }, backgroundColor: surf, borderColor: css("--line"), borderWidth: 1, confine: true,
+        textStyle: { color: ink, fontFamily: css("--font-ui"), fontSize: 12.5 }, extraCssText: "max-width:min(320px,92vw);white-space:normal;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);", formatter: (ps) => this.tipHtml(ps) },
+      xAxis: { type: "category", data: BD.m, boundaryGap: anyBar, axisLine: { onZero: false, lineStyle: { color: css("--line") } }, axisTick: { show: false }, axisLabel: { color: muted, fontSize: 9, hideOverlap: true } },
+      yAxis: { type: "value", scale: false, axisLabel: { color: muted, fontSize: 9, formatter: (v) => bnbAx(def, v) }, splitLine: { lineStyle: { color: line } } },
+      dataZoom: [
+        { type: "slider", xAxisIndex: 0, startValue: S.from, endValue: S.to, height: 20, bottom: 4, filterMode: "filter", brushSelect: false, showDataShadow: true,
+          borderColor: css("--line"), backgroundColor: "transparent", fillerColor: "rgba(90,147,240,.16)", dataBackground: { lineStyle: { color: muted, width: 1 }, areaStyle: { color: css("--chip") } },
+          selectedDataBackground: { lineStyle: { color: c1 }, areaStyle: { color: c1, opacity: .25 } }, handleSize: "120%", handleStyle: { color: surf, borderColor: ink2 },
+          textStyle: { color: ink2, fontSize: 9 }, moveHandleSize: 6, labelFormatter: (v, str) => str }
+      ],
+      series: this.buildSeries()
+    };
+  }
+  refresh() { if (this.c) this.c.inst.setOption({ series: this.buildSeries() }); }
+  render() { if (this.c) this.c.inst.setOption(this.option(), true); }
+
+  /* ---------- сваляне: точно това, което се вижда (без плъзгача) ---------- */
+  fname() { const S = this.S, M = BD.m; return this.def.file + "-" + M[S.from] + "-" + M[S.to]; }
+  exportOption() {
+    const o = this.option();
+    o.animation = false; o.animationDuration = 0; o.series.forEach((x) => { x.animation = false; x.markLine && (x.markLine.animation = false); }); delete o.tooltip;
+    o.dataZoom = [{ type: "inside", xAxisIndex: 0, startValue: this.S.from, endValue: this.S.to, filterMode: "filter" }];
+    o.grid.bottom = 28; o.grid.top = 30;
+    o.title = { text: T[this.p + ".title"], left: 6, top: 2, textStyle: { fontSize: 11, fontWeight: 600, color: css("--ink2"), fontFamily: css("--font-ui") } };
+    return o;
+  }
+  async exportPng() {
+    const c = this.c, w = c.el.clientWidth, h = c.el.clientHeight - 30, ratio = 2;
+    const host = document.createElement("div");
+    host.style.cssText = "position:fixed;left:-99999px;top:0;width:" + w + "px;height:" + h + "px;pointer-events:none";
+    document.body.append(host);
+    try {
+      const inst = echarts.init(host, null, { renderer: "canvas", width: w, height: h, devicePixelRatio: ratio });
+      inst.setOption(this.exportOption());
+      await new Promise((ok) => requestAnimationFrame(() => setTimeout(ok, 80)));
+      const url = inst.getDataURL({ type: "png", pixelRatio: ratio, backgroundColor: css("--surface") });
+      inst.dispose();
+      const bin = atob(url.split(",")[1]), u = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      return new Blob([u], { type: "image/png" });
+    } finally { host.remove(); }
+  }
+  async doDownload(kind) {
+    try {
+      const S = this.S, def = this.def, M = BD.m;
+      if (kind === "png") { await save(await this.exportPng(), this.fname() + ".png"); return; }
+      const head = [T.bnbMonth, ...def.series.map((s) => this.nameOf(s.id) + " (" + def.unit + ")")], rows = [];
+      for (let i = S.from; i <= S.to; i++) rows.push([M[i], ...def.series.map((s) => this.cur[s.id][i] ?? "")]);
+      if (kind === "xlsx") await save(xlsxBlob(head, rows, [0, ...def.series.map(() => BNB_STYLE[def.dec] ?? 4)], T[this.p + ".title"]), this.fname() + ".xlsx");
+      else await save(new Blob(["﻿" + [head, ...rows].map((r) => r.map((v) => (typeof v === "string" && /[,;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v)).join(",")).join("\r\n")], { type: "text/csv;charset=utf-8" }), this.fname() + ".csv");
+    } catch (e) { console.error(e); flash(T.dlErr); }
+  }
+  makeDl() {
+    const w = document.createElement("div"); w.className = "dlwrap";
+    const b = document.createElement("button"); b.className = "dl"; b.setAttribute("aria-haspopup", "true"); b.setAttribute("aria-expanded", "false"); b.append(T.download); b.insertAdjacentHTML("beforeend", ICON.dl);
+    const m = document.createElement("div"); m.className = "dlmenu"; m.hidden = true;
+    [["png", T.dlPng], ["xlsx", T.dlXlsx], ["csv", T.dlCsv]].forEach(([k, tx]) => { const x = document.createElement("button"); x.dataset.dl = k; x.textContent = tx; m.append(x); });
+    b.onclick = (e) => { e.stopPropagation(); allBlocks().forEach((bl) => bl.togglePop(false)); const open = m.hidden; closeMenus(); m.hidden = !open; b.setAttribute("aria-expanded", String(open)); };
+    m.onclick = (e) => { const k = e.target.dataset.dl; if (!k) return; closeMenus(); this.doDownload(k); };
+    w.append(b, m); return w;
+  }
+
+  mount() {
+    const r = this.r;
+    this.ro.disconnect(); if (this.c) this.c.inst.dispose(); this.c = null;
+    const host = r("charts"); host.innerHTML = ""; r("dlSlot").innerHTML = "";
+    const el = document.createElement("div"); el.className = "cv"; el.setAttribute("role", "img"); el.setAttribute("aria-label", T[this.p + ".chartPair"]);
+    host.append(el);
+    const inst = echarts.init(el, null, { renderer: "svg" }); this.c = { inst, el };
+    inst.on("datazoom", () => {
+      const o = inst.getOption().dataZoom[0], M = BD.m, conv = (v) => (typeof v === "number" ? Math.round(v) : M.indexOf(v));
+      const a = conv(o.startValue), b = conv(o.endValue), S = this.S;
+      if (a >= 0 && b >= 0 && (a !== S.from || b !== S.to)) this.setWindow(a, b, this.c);
+    });
+    this.ro.observe(el);
+    r("dlSlot").append(this.makeDl());
+    this.render(); this.syncControls();
+  }
+
+  /* ---------- таблица ---------- */
+  buildTable() {
+    const { cur, S, def } = this, t = this.r("tbl"), idx = [...BD.m.keys()].reverse();
+    const head = '<thead><tr><th class="first">' + T.thIndicator + "</th>" + idx.map((i) => '<th data-col="' + i + '">' + BD.m[i] + "</th>").join("") + "</tr></thead>";
+    const row = (sd) => {
+      const name = T[this.p + "." + sd.id + ".row"], hid = S.hide[sd.id];
+      return '<tr><td class="first"><button data-toggle="' + sd.id + '" aria-pressed="' + !hid + '" aria-label="' + (hid ? T.show : T.hide) + " " + name + '"><span class="sw" style="background:var(' + sd.col + ");opacity:" + (hid ? 0.25 : 1) + '"></span>' + name + "</button></td>"
+        + idx.map((i) => '<td data-col="' + i + '">' + this.fv(cur[sd.id][i]) + "</td>").join("") + "</tr>";
+    };
+    t.innerHTML = head + "<tbody>" + def.series.map(row).join("") + "</tbody>";
+    t.querySelectorAll("[data-toggle]").forEach((b) => (b.onclick = () => this.toggleHide(b.dataset.toggle)));
+    this.syncControls();
+  }
+}
+
+/* зарежда данните от БНБ при първото отваряне на раздела */
+async function ensureBnb() {
+  if (bnbState === "ready" || bnbState === "loading" || !TEXTS) return;
+  bnbState = "loading"; const host = $("bnbBlocks"); showMsg(T.loading, false, null, "bnbBlocks");
+  if (!(CONFIG.supabaseUrl && CONFIG.anonKey)) { bnbState = "idle"; showMsg(T.errNoCfg, true, null, "bnbBlocks"); return; }
+  try { BD = await loadBnb(); } catch (e) { console.error(e); bnbState = "idle"; showMsg(T.errTitle, true, String(e.message || e), "bnbBlocks"); return; }
+  host.innerHTML = ""; bnbBlocks = BNB_DEFS.map((d) => new BnbBlock(d, host)); bnbBlocks.forEach((b) => b.start()); bnbState = "ready";
 }
 
 /* ============ СТРАНИЦА ============ */
 function paintShell() {
   document.documentElement.lang = LANG; document.title = T.pageTitle;
   document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = T[el.dataset.i18n]));
-  $("c-bnb").textContent = T.navBnb + ". " + T.comingSoon; $("c-contacts").textContent = T.navContacts + ". " + T.comingSoon;
+  $("c-contacts").textContent = T.navContacts + ". " + T.comingSoon;
   document.querySelectorAll(".ic").forEach((el) => el.style.setProperty("--m", 'url("' + ICONS[el.dataset.icon] + '")'));
   const lb = $("langBtn"); lb.innerHTML = LANG === "bg" ? FLAG_EN : FLAG_BG; lb.title = lb.ariaLabel = T.langTo;
   const tb = $("themeBtn"); tb.title = tb.ariaLabel = isDark() ? T.themeToLight : T.themeToDark;
 }
-function showMsg(txt, isErr, extra) {
-  const h = $("blocks"); h.innerHTML = "";
+function showMsg(txt, isErr, extra, hostId) {
+  const h = $(hostId || "blocks"); h.innerHTML = "";
   const d = document.createElement("div"); d.className = "msg card"; d.setAttribute("role", isErr ? "alert" : "status");
   const p = document.createElement("p"); p.textContent = txt; d.append(p);
   if (extra) { const s = document.createElement("code"); s.textContent = extra; d.append(s); }
   h.append(d);
 }
-function setLang(l) { LANG = l; try { localStorage.setItem("lang", l); } catch (e) {} setT(); paintShell(); blocks.forEach((b) => b.repaint()); }
+function setLang(l) { LANG = l; try { localStorage.setItem("lang", l); } catch (e) {} setT(); paintShell(); allBlocks().forEach((b) => b.repaint()); }
 $("langBtn").onclick = () => { if (TEXTS) setLang(LANG === "bg" ? "en" : "bg"); };
 $("themeBtn").onclick = () => { const t = isDark() ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("theme", t); } catch (e) {} if (TEXTS) paintShell(); };
-document.addEventListener("click", (e) => { closeMenus(); blocks.forEach((b) => { const pop = b.r("pop"); if (!pop.hidden && !pop.contains(e.target)) b.togglePop(false); }); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") { blocks.forEach((b) => b.togglePop(false)); closeMenus(); closeFly(); } });
+document.addEventListener("click", (e) => { closeMenus(); allBlocks().forEach((b) => { const pop = b.r("pop"); if (!pop.hidden && !pop.contains(e.target)) b.togglePop(false); }); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { allBlocks().forEach((b) => b.togglePop(false)); closeMenus(); closeFly(); } });
 const fly = $("fly"), closeFly = () => { fly.hidden = true; };
-function openFly(btn) {
+function openFly(btn, list) {
   fly.innerHTML = "";
-  blocks.forEach((b) => { const x = document.createElement("button"); x.setAttribute("role", "menuitem"); x.textContent = T[b.p + ".title"]; x.onclick = (e) => { e.stopPropagation(); closeFly(); b.root.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); }; fly.append(x); });
+  list.forEach((b) => { const x = document.createElement("button"); x.setAttribute("role", "menuitem"); x.textContent = T[b.p + ".title"]; x.onclick = (e) => { e.stopPropagation(); closeFly(); b.root.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); }; fly.append(x); });
   const r = btn.getBoundingClientRect(), mob = matchMedia("(max-width: 760px)").matches;
   fly.style.left = (mob ? Math.max(8, r.left) : r.right + 6) + "px"; fly.style.top = (mob ? r.bottom + 6 : r.top) + "px"; fly.hidden = false;
 }
 document.querySelectorAll(".nav").forEach((b) => (b.onclick = () => {
   document.querySelectorAll(".nav").forEach((x) => x.removeAttribute("aria-current")); b.setAttribute("aria-current", "page");
   ["agency", "bnb", "contacts"].forEach((v) => ($("v-" + v).hidden = v !== b.dataset.view));
-  if (b.dataset.view === "agency") { blocks.forEach((bl) => bl.charts.forEach((c) => c.inst.resize())); if (blocks.length) { if (fly.hidden) openFly(b); else closeFly(); } } else closeFly();
+  const v = b.dataset.view;
+  if (v === "bnb") ensureBnb();
+  if (v === "agency" || v === "bnb") {
+    allBlocks().forEach((bl) => (bl.charts ? bl.charts.forEach((c) => c.inst.resize()) : bl.c && bl.c.inst.resize()));
+    const list = v === "agency" ? blocks : bnbBlocks;
+    if (list.length) { if (fly.hidden) openFly(b, list); else closeFly(); } else closeFly();
+  } else closeFly();
 }));
-document.addEventListener("click", (e) => { if (!e.target.closest("#fly, .nav[data-view=agency]")) closeFly(); });
+document.addEventListener("click", (e) => { if (!e.target.closest("#fly, .nav[data-view=agency], .nav[data-view=bnb]")) closeFly(); });
 window.addEventListener("resize", closeFly);
-const renderAll = () => blocks.forEach((b) => b.charts.length && b.render());
+const renderAll = () => { blocks.forEach((b) => b.charts.length && b.render()); bnbBlocks.forEach((b) => b.c && b.render()); };
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { renderAll(); if (TEXTS) paintShell(); });
 new MutationObserver(renderAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
