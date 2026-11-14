@@ -529,3 +529,21 @@ b4.info1.h: What it shows
 b4.info1.p: How much outstanding credit there is at the end of each month – in total for non-financial corporations and separately consumer and housing loans to households. It includes performing and bad (restructured) loans.
 b4.info2.h: Source and notes
 b4.info2.p: BNB data (table "Loans to non-financial corporations, financial corporations, households and NPISH, residents of Bulgaria", in EUR thousand). Shown here in EUR million; stored in EUR thousand in the database. Corporate loans exclude overdrafts. The series contains breaks in late 2014 and 2015 whose cause is not established.
+
+b5.title: Deposit interest rates
+b5.sub: Average interest rate on deposits: households (over 3 to 6 months) and the weighted average for households and corporations (over 1 day to 2 years).
+b5.table: Values by month
+b5.unit: % per year
+b5.ul: %
+b5.chartOne: Chart:
+b5.chartPair: Chart of deposit interest rates by month
+b5.hh36.name: Households – deposits over 3 to 6 months
+b5.hh36.short: Households, 3–6 mo.
+b5.hh36.row: Households, deposits over 3 to 6 months (%)
+b5.w.name: Households and corporations – weighted average rate, over 1 day to 2 years
+b5.w.short: Weighted average, up to 2 y
+b5.w.row: Weighted average rate, households and corporations, over 1 day to 2 years (%)
+b5.info1.h: What it shows
+b5.info1.p: How much interest banks pay on deposits. The first line is for household deposits with a maturity of over 3 to 6 months. The second is combined for households and non-financial corporations, with a maturity of over 1 day to 2 years.
+b5.info2.h: How it is calculated
+b5.info2.p: The rates refer to outstanding amounts, i.e. all existing deposits, not only new ones. The weighted average is calculated in the database: (corporate rate × corporate volume + household rate × household volume) ÷ total volume. The sector with more money weighs more.

@@ -736,7 +736,9 @@ const BNB_DEFS = [
   { key: "b2", file: "bnb-novi-krediti", dec: 1, unit: "m", src: "Ir",
     series: [{ id: "hou", col: "--s1", f: "l_nb_hh_m" }, { id: "con", col: "--s2", f: "l_nb_hh_c" }] },
   { key: "b3", file: "bnb-novi-krediti-promyana", dec: 1, unit: "%", sign: true, src: "Ir",
-    series: [{ id: "hou", col: "--s1", f: "l_nb_hh_m_yoy" }, { id: "con", col: "--s2", f: "l_nb_hh_c_yoy" }] }
+    series: [{ id: "hou", col: "--s1", f: "l_nb_hh_m_yoy" }, { id: "con", col: "--s2", f: "l_nb_hh_c_yoy" }] },
+  { key: "b5", file: "bnb-lihvi-depoziti", dec: 2, unit: "%", src: "Ir",
+    series: [{ id: "hh36", col: "--s1", f: "d_i_hh_3m6m" }, { id: "w", col: "--s2", f: "d_i_hhnfc_1d2y" }] }
 ];
 let BD = { m: [], f: {} }, bnbBlocks = [], bnbState = "idle";
 const allBlocks = () => [...blocks, ...bnbBlocks];
