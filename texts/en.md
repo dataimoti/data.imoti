@@ -446,3 +446,24 @@ v.info4.p: Removed liens are available from 2009 Q2; before that the column is e
     is often of a lien from earlier years, so the difference between the two bars is not
     the exact number of liens in force. The report does not say what debt a lien relates
     to.
+
+# ===== BNB =====
+bnbMonth: Month
+bnbSourceLabel: Source: Bulgarian National Bank – interest rate statistics
+bnbSourceUrl: https://www.bnb.bg/Statistics/StMonetaryInterestRateStatistics/index.htm
+
+b1.title: Annual percentage rate of charge (APRC) on new loans
+b1.sub: Average APRC on new household loans – housing and consumer, by month.
+b1.table: Values by month
+b1.unit: % per year
+b1.chartPair: Chart of APRC on housing and consumer loans by month
+b1.hou.name: Housing loans (house purchase)
+b1.hou.short: Housing
+b1.hou.row: Housing loans, APRC (%)
+b1.con.name: Consumer loans
+b1.con.short: Consumer
+b1.con.row: Consumer loans, APRC (%)
+b1.info1.h: What it shows
+b1.info1.p: The average annual percentage rate of charge (APRC) on loans to households in euro newly granted during the month. APRC includes interest and loan fees, so it is a fuller measure than the headline interest rate.
+b1.info2.h: Source and notes
+b1.info2.p: BNB data, monthly. The series may contain breaks (e.g. November 2014 and December 2015) whose cause is not established.
