@@ -278,6 +278,18 @@ sup.pf { font-size: 8px; color: var(--muted); margin-left: 1px; }
 .seg.txt button[aria-pressed="true"] { background: var(--chip2); color: var(--ink); }
 .etab[aria-selected="true"], .etab[aria-selected="true"]:hover { background: var(--chip2); color: var(--ink); border-top-color: var(--s1); }
 #euroBlocks .chip[aria-pressed="true"], #euroBlocks .tool[aria-pressed="true"] { background: var(--chip2); border-color: var(--line); color: var(--ink); }
+
+.etabs { margin: 0 0 10px 0; gap: 8px; }
+.etab { border: 1px solid var(--line); border-radius: 8px; padding: 7px 16px; background: var(--surface); }
+.etab:hover { background: var(--chip); }
+.etab[aria-selected="true"], .etab[aria-selected="true"]:hover { background: var(--chip2); color: var(--ink); border-color: var(--line); }
+.card.etabbed { border-top-left-radius: inherit; }
+
+.etabs { margin: 0 0 -1px 14px; gap: 4px; }
+.etab { border: 1px solid var(--line); border-bottom: 0; border-top: 3px solid var(--dash); border-radius: 8px 8px 0 0; background: var(--chip); color: var(--ink2); padding: 7px 18px; }
+.etab:hover { background: var(--chip2); color: var(--ink); }
+.etab[aria-selected="true"], .etab[aria-selected="true"]:hover { background: var(--surface); color: var(--ink); border-color: var(--line); border-top-color: var(--s1); }
+.card.etabbed { border-top-left-radius: 0; }
 </style>
 <script>try{var __t=localStorage.getItem("theme");if(__t==="dark"||__t==="light")document.documentElement.setAttribute("data-theme",__t)}catch(e){}</script>
 
@@ -1410,7 +1422,7 @@ class EuroBlock {
     const th = this.bins(Object.values(vals)), nb = th.length + 1, palFor = (i) => EU_MAPPAL[nb === 6 ? i : Math.round((i * 5) / Math.max(1, nb - 1))];
     const bi = (v) => { let i = 0; while (i < th.length && v >= th[i]) i++; return i; };
     const ink = "#17191d", W = EG.W, H = EG.H, A = EG.anchors, ui = css("--font-ui"), mono = css("--font-num");
-    let svg = '<svg class="emap" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + escH(T["eu.title"]) + '" font-family="' + ui + '"><rect x="-800" y="-800" width="' + (W + 1600) + '" height="' + (H + 1600) + '" fill="' + css("--chip") + '"/><path d="' + EG.ctx + '" fill="' + css("--chip2") + '" stroke="' + css("--surface") + '" stroke-width=".7"/>';
+    let svg = '<svg class="emap" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + escH(T["eu.title"]) + '" font-family="' + ui.replace(/"/g, "'") + '"><rect x="-800" y="-800" width="' + (W + 1600) + '" height="' + (H + 1600) + '" fill="' + css("--chip") + '"/><path d="' + EG.ctx + '" fill="' + css("--chip2") + '" stroke="' + css("--surface") + '" stroke-width=".7"/>';
     Object.keys(EG.paths).forEach((g) => {
       const on = shown.has(g) && vals[g] != null, fill = on ? palFor(bi(vals[g])) : css("--chip2");
       svg += '<path data-g="' + g + '" d="' + EG.paths[g] + '" fill="' + fill + '" stroke="' + (on ? ink : css("--surface")) + '" stroke-width="' + (on ? (g === "BG" ? 2.2 : 1.1) : 0.8) + '" stroke-linejoin="round" tabindex="' + (on ? 0 : -1) + '"' + (on ? ' aria-label="' + escH(this.gname(g) + " " + this.fmtV(m, vals[g])) + '"' : "") + "/>";
@@ -1420,7 +1432,7 @@ class EuroBlock {
       const dark = bi(v) >= 3, tc = dark ? "#fff" : ink, big = !EU_SMALL[g] && g !== "CY" && g !== "MT", fs = big ? 11.5 : 9, vs = this.fmtV(m, v, m === "chg" && Math.abs(v) >= 100 ? 0 : 1);
       if (g === "MT") { svg += '<text x="' + (a[0] + 10) + '" y="' + (a[1] + 3.5) + '" font-size="9.5" font-weight="700" fill="' + ink + '" pointer-events="none">MT ' + vs + "</text>"; return; }
       if (g === "CY") { svg += '<text x="' + a[0] + '" y="' + (a[1] + 16) + '" text-anchor="middle" font-size="9.5" font-weight="700" fill="' + ink + '" pointer-events="none">CY ' + vs + "</text>"; return; }
-      svg += '<text x="' + a[0] + '" y="' + (a[1] - 1) + '" text-anchor="middle" font-size="' + fs + '" font-weight="700" fill="' + tc + '" pointer-events="none">' + g + '</text><text x="' + a[0] + '" y="' + (a[1] + fs) + '" text-anchor="middle" font-size="' + (fs - 1.5) + '" font-family="' + mono + '" fill="' + tc + '" pointer-events="none">' + vs + "</text>";
+      svg += '<text x="' + a[0] + '" y="' + (a[1] - 1) + '" text-anchor="middle" font-size="' + fs + '" font-weight="700" fill="' + tc + '" pointer-events="none">' + g + '</text><text x="' + a[0] + '" y="' + (a[1] + fs) + '" text-anchor="middle" font-size="' + (fs - 1.5) + '" font-family="' + mono.replace(/"/g, "'") + '" fill="' + tc + '" pointer-events="none">' + vs + "</text>";
     });
     svg += "</svg>";
     let lg = '<div class="elegend" role="list">'; const fm = (x) => this.fmtV(m, x, m === "ann" || Math.abs(x) < 30 ? 1 : 0);
@@ -1468,7 +1480,7 @@ class EuroBlock {
   fname() { const S = this.S, P = ED.P; return "eurostat-hpi-" + this.tab + "-" + this.metric + "-" + qlab(P[S.from]) + "-" + qlab(P[S.to]); }
   async exportPng() {
     if (this.charts[0]) { const url = this.charts[0].inst.getDataURL({ type: "png", pixelRatio: 2, backgroundColor: css("--surface") }), bin = atob(url.split(",")[1]), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type: "image/png" }); }
-    const svgEl = this.r("body").querySelector("svg"), s = new XMLSerializer().serializeToString(svgEl).replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
+    const svgEl = this.r("body").querySelector("svg"), s = new XMLSerializer().serializeToString(svgEl);
     const img = new Image(); await new Promise((ok, no) => { img.onload = ok; img.onerror = no; img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(s); });
     const cv = document.createElement("canvas"); const vb = svgEl.viewBox.baseVal; cv.width = 1520; cv.height = Math.round(1520 * vb.height / vb.width); const c = cv.getContext("2d"); c.fillStyle = css("--surface"); c.fillRect(0, 0, cv.width, cv.height); c.drawImage(img, 0, 0, cv.width, cv.height);
     return await new Promise((ok) => cv.toBlob(ok, "image/png"));
