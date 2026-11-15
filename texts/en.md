@@ -724,3 +724,41 @@ hi.noteQ_ann: Annual inflation at {b}
 hi.noteQ_chg: Price increase from {a} to {b}
 hi.noteQ_idx: Price index (2015 = 100) at {b}
 hi.thQuarter: Month
+
+# ---- Eurostat: Wages (lc_lci_r2_q) ----
+lc.title: Wages and labour costs in Europe
+lc.sub: Hourly labour cost index (2020 = 100) – comparison between countries by sector.
+lc.foot: Source: Eurostat, table lc_lci_r2_q (labour cost index by NACE Rev. 2). Data are calendar adjusted and published quarterly. These are employers' costs per hour worked, not net take-home pay. "p" = provisional, "b" = break in series, "e" = estimated.
+lc.tblTitle: Countries and latest quarters
+lc.srcUrl: https://ec.europa.eu/eurostat/databrowser/view/lc_lci_r2_q/default/table?lang=en
+lc.srcLabel: Open the table at Eurostat
+lc.info1.h: What it shows
+lc.info1.p: The labour cost index shows how employers' hourly labour costs change. "Wages and salaries" is the closest to gross pay. "Total labour cost" also includes social contributions and other employer costs.
+lc.info2.h: Sectors, not occupations
+lc.info2.p: The data are by economic sector (NACE), not by occupation, so there is no separate data for engineers or teachers. The closest to the "public sector" is the group public administration, education, health and other services, which also includes private schools and hospitals.
+lc.info3.h: How to read the modes
+lc.info3.p: "Annual" is the change against the same quarter a year earlier. "Change over period" is the cumulative growth between two chosen quarters, computed from the index. "Index level" is the index itself (2020 = 100). The latest quarters are provisional.
+lc.lblItem: Sector
+lc.lblSt: Cost type
+lc.m_ann: Annual change
+lc.m_chg: Change over period
+lc.m_idx: Index level
+lc.i_B-N: Business economy
+lc.i_B-S_X_O: Industry, construction and services
+lc.i_B-E: Industry (excl. construction)
+lc.i_B-F: Industry and construction
+lc.i_C: Manufacturing
+lc.i_B: Mining and quarrying
+lc.i_D: Electricity, gas and heating
+lc.i_F: Construction
+lc.i_J: Information and communication
+lc.i_K: Finance and insurance
+lc.i_L: Real estate activities
+lc.i_O-S: Public administration, education, health and other services
+lc.st_D11: Wages and salaries
+lc.st_D1_D4_MD5: Total labour cost
+lc.noteC_ann: Annual change in labour costs, %, {a} – {b}
+lc.noteC_idx: Labour cost index (2020 = 100), {a} – {b}
+lc.noteQ_ann: Annual change at {b}
+lc.noteQ_chg: Change in labour costs from {a} to {b}
+lc.noteQ_idx: Labour cost index (2020 = 100) at {b}
