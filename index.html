@@ -266,6 +266,14 @@ sup.pf { font-size: 8px; color: var(--muted); margin-left: 1px; }
 .ezoomb button { width: 30px; height: 30px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; font: 600 16px/1 var(--font-ui); cursor: pointer; }
 .ezoomb button:hover { background: var(--chip); }
 .emap { user-select: none; -webkit-user-select: none; }
+
+.emapwrap { display: flex; gap: 14px; align-items: flex-start; justify-content: center; }
+.emapbox { position: relative; flex: 1 1 auto; min-width: 0; max-width: 800px; }
+.emapbox .emap { max-width: none; margin: 0; border-radius: 8px; }
+.emapwrap .elegend { flex: 0 0 128px; flex-direction: column; margin: 0; max-width: none; gap: 2px; }
+.emapwrap .elegend span { min-width: 0; text-align: left; }
+.ezoomb { top: 8px; right: 8px; }
+@media (max-width: 760px) { .emapwrap { flex-direction: column; } .emapwrap .elegend { flex: none; flex-direction: row; width: 100%; } .emapwrap .elegend span { flex: 1 1 auto; text-align: center; } }
 </style>
 <script>try{var __t=localStorage.getItem("theme");if(__t==="dark"||__t==="light")document.documentElement.setAttribute("data-theme",__t)}catch(e){}</script>
 
@@ -1354,7 +1362,7 @@ class EuroBlock {
       if (isBar) { s.barMaxWidth = 18; s.label = { show: S.lab && n <= 12 && list.length <= 4, position: "top", fontSize: 9, color: ink, fontFamily: mono, formatter: (p) => this.fmtV(m, p.value) }; }
       else {
         s.showSymbol = false; s.symbolSize = 5; s.connectNulls = false; s.lineStyle = { width: g === "BG" ? 3 : g === "EU27_2020" ? 2.2 : 1.6, color };
-        s.endLabel = { show: S.lab, formatter: (p) => nm + " " + this.fmtV(m, p.value), color, fontSize: 10, fontWeight: 600, fontFamily: ui };
+        s.endLabel = { show: S.lab, formatter: () => nm + " " + this.fmtV("chg", this.val(g, "chg")), color, fontSize: 10, fontWeight: 600, fontFamily: ui };
       }
       if (S.avg) { const v = data.filter((x) => x != null); if (v.length) { const av = v.reduce((a, b) => a + b, 0) / v.length; s.markLine = { silent: true, symbol: "none", animation: false, label: { show: false }, lineStyle: { type: "dashed", color, width: 1.2 }, data: [{ yAxis: av }] }; } }
       return s;
@@ -1398,7 +1406,7 @@ class EuroBlock {
     const th = this.bins(Object.values(vals)), nb = th.length + 1, palFor = (i) => EU_MAPPAL[nb === 6 ? i : Math.round((i * 5) / Math.max(1, nb - 1))];
     const bi = (v) => { let i = 0; while (i < th.length && v >= th[i]) i++; return i; };
     const ink = "#17191d", W = EG.W, H = EG.H, A = EG.anchors, ui = css("--font-ui"), mono = css("--font-num");
-    let svg = '<svg class="emap" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + escH(T["eu.title"]) + '" font-family="' + ui + '"><rect width="' + W + '" height="' + H + '" rx="8" fill="' + css("--chip") + '"/><path d="' + EG.ctx + '" fill="' + css("--chip2") + '" stroke="' + css("--surface") + '" stroke-width=".7"/>';
+    let svg = '<svg class="emap" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + escH(T["eu.title"]) + '" font-family="' + ui + '"><rect x="-800" y="-800" width="' + (W + 1600) + '" height="' + (H + 1600) + '" fill="' + css("--chip") + '"/><path d="' + EG.ctx + '" fill="' + css("--chip2") + '" stroke="' + css("--surface") + '" stroke-width=".7"/>';
     Object.keys(EG.paths).forEach((g) => {
       const on = shown.has(g) && vals[g] != null, fill = on ? palFor(bi(vals[g])) : css("--chip2");
       svg += '<path data-g="' + g + '" d="' + EG.paths[g] + '" fill="' + fill + '" stroke="' + (on ? ink : css("--surface")) + '" stroke-width="' + (on ? (g === "BG" ? 2.2 : 1.1) : 0.8) + '" stroke-linejoin="round" tabindex="' + (on ? 0 : -1) + '"' + (on ? ' aria-label="' + escH(this.gname(g) + " " + this.fmtV(m, vals[g])) + '"' : "") + "/>";
@@ -1414,7 +1422,7 @@ class EuroBlock {
     let lg = '<div class="elegend" role="list">'; const fm = (x) => this.fmtV(m, x, m === "ann" || Math.abs(x) < 30 ? 1 : 0);
     for (let i = 0; i < nb; i++) lg += '<span role="listitem" class="' + (i >= 3 ? "dk" : "") + '" style="background:' + palFor(i) + '">' + (nb === 1 ? "" : i === 0 ? "< " + fm(th[0]) : i === nb - 1 ? "≥ " + fm(th[i - 1]) : fm(th[i - 1]) + " – " + fm(th[i])) + "</span>";
     lg += '<span role="listitem" style="background:' + css("--chip2") + '">' + escH(T["eu.noData"]) + "</span></div>";
-    body.innerHTML = svg + lg;
+    body.innerHTML = '<div class="emapwrap"><div class="emapbox">' + svg + "</div>" + lg + "</div>";
     const tip = (this.tip = document.createElement("div")); tip.className = "etip"; tip.hidden = true; body.append(tip);
     const ranked = Object.entries(vals).filter(([, v]) => v != null).sort((a, b) => b[1] - a[1]), svgEl = body.querySelector("svg");
     const show = (g, x, y) => {
@@ -1428,13 +1436,14 @@ class EuroBlock {
     svgEl.addEventListener("pointerleave", () => (tip.hidden = true));
 
     /* зум и местене */
-    const HOME = { x: 0, y: 150, w: W, h: 480 }, v0 = () => ({ ...HOME }); let v = S.view || v0(), pts = new Map(), moved = false, last = null;
+    const HOME = { x: 10, y: 138, w: 690, h: 542 }, ASP = HOME.h / HOME.w, MAXW = H / ASP, v0 = () => ({ ...HOME }); let v = S.view || v0(), pts = new Map(), moved = false, last = null;
     const apply = () => { svgEl.setAttribute("viewBox", v.x + " " + v.y + " " + v.w + " " + v.h); S.view = v; const z = Math.abs(v.w - HOME.w) > 0.5 || Math.abs(v.x - HOME.x) > 0.5 || Math.abs(v.y - HOME.y) > 0.5; svgEl.style.touchAction = z ? "none" : "pan-y"; svgEl.style.cursor = "grab"; };
-    const zoomAt = (f, cx, cy) => { const nw = Math.min(W, Math.max(W / 8, v.w / f)), k = nw / v.w, nh = nw * HOME.h / HOME.w; v = { w: nw, h: nh, x: Math.min(W - nw, Math.max(0, cx - (cx - v.x) * k)), y: Math.min(H - nh, Math.max(0, cy - (cy - v.y) * k)) }; apply(); };
+    const lim = (a, size, tot) => Math.min(Math.max(tot - size, 0), Math.max(Math.min(tot - size, 0), a));
+    const zoomAt = (f, cx, cy) => { const nw = Math.min(MAXW, Math.max(HOME.w / 6, v.w / f)), k = nw / v.w, nh = nw * ASP; v = { w: nw, h: nh, x: lim(cx - (cx - v.x) * k, nw, W), y: lim(cy - (cy - v.y) * k, nh, H) }; apply(); };
     const toSvg = (px, py) => { const b = svgEl.getBoundingClientRect(); return [v.x + (px - b.left) / b.width * v.w, v.y + (py - b.top) / b.height * v.h]; };
     const zb = document.createElement("div"); zb.className = "ezoomb";
     [["+", "eu.zoomIn", () => zoomAt(1.6, v.x + v.w / 2, v.y + v.h / 2)], ["\u2212", "eu.zoomOut", () => zoomAt(1 / 1.6, v.x + v.w / 2, v.y + v.h / 2)], ["\u27f2", "eu.zoomReset", () => { v = v0(); apply(); }]].forEach(([t, k, fn]) => { const b = document.createElement("button"); b.type = "button"; b.textContent = t; b.title = T[k]; b.setAttribute("aria-label", T[k]); b.onclick = fn; zb.append(b); });
-    body.append(zb); apply();
+    body.querySelector(".emapbox").append(zb); apply();
     svgEl.addEventListener("wheel", (e) => { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); const [cx, cy] = toSvg(e.clientX, e.clientY); zoomAt(e.deltaY < 0 ? 1.25 : 0.8, cx, cy); }, { passive: false });
     svgEl.addEventListener("pointerdown", (e) => { pts.set(e.pointerId, [e.clientX, e.clientY]); moved = false; last = null; });
     svgEl.addEventListener("pointermove", (e) => {
@@ -1443,7 +1452,7 @@ class EuroBlock {
       const dx = e.clientX - old[0], dy = e.clientY - old[1];
       if (!moved && Math.hypot(dx, dy) < 3) return; if (!moved) { moved = true; try { svgEl.setPointerCapture(e.pointerId); } catch (x) {} svgEl.style.cursor = "grabbing"; }
       pts.set(e.pointerId, [e.clientX, e.clientY]); tip.hidden = true;
-      v = { w: v.w, h: v.h, x: Math.min(W - v.w, Math.max(0, v.x - dx * v.w / b.width)), y: Math.min(H - v.h, Math.max(0, v.y - dy * v.h / b.height)) }; apply(); svgEl.style.cursor = "grabbing";
+      v = { w: v.w, h: v.h, x: lim(v.x - dx * v.w / b.width, v.w, W), y: lim(v.y - dy * v.h / b.height, v.h, H) }; apply(); svgEl.style.cursor = "grabbing";
     });
     const up = (e) => { pts.delete(e.pointerId); if (!pts.size) { moved = false; apply(); } };
     svgEl.addEventListener("pointerup", up); svgEl.addEventListener("pointercancel", up);
