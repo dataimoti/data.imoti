@@ -613,3 +613,85 @@ cErrSend: Your message was NOT sent. Please try again in a moment.
 cReq: Required field
 cErrLong: The message is too long. The maximum is 2000 characters.
 cCount: Message too long:
+
+# ---- Eurostat ----
+navEurostat: Eurostat
+eu.title: House prices in Europe
+eu.sub: House price index (2015 = 100) – comparison between countries.
+eu.foot: Source: Eurostat, table prc_hpi_q. Published quarterly with a lag of about 3 months. Greece is missing from the source; the United Kingdom and Türkiye have no recent data. "p" = provisional.
+eu.tblTitle: Countries and latest quarters
+eu.srcUrl: https://ec.europa.eu/eurostat/databrowser/view/prc_hpi_q/default/table?lang=en
+eu.srcLabel: Open the table at Eurostat
+eu.info1.h: What it shows
+eu.info1.p: The House Price Index (HPI) tracks how prices of all dwellings bought by households change. 100 is the 2015 level; it is not a price in euro, only a change over time.
+eu.info2.h: How to read the modes
+eu.info2.p: "Annual" is growth against the same quarter a year earlier. "Change over period" is growth between two chosen quarters, computed from the index. "Index level" is the value itself (2015 = 100).
+eu.info3.h: Limits
+eu.info3.p: New quarters appear about 3 months late. Greece is not in this dataset. Malta is drawn as a circle and Luxembourg has no label on the map.
+eu.tab_map: Map
+eu.tab_chart: Chart
+eu.tab_bar: Bars
+eu.lblMetric: Measure
+eu.lblItem: Dwellings
+eu.m_ann: Annual
+eu.m_chg: Change over period
+eu.m_idx: Index level
+eu.i_TOTAL: All
+eu.i_DW_NEW: New
+eu.i_DW_EXST: Existing
+eu.noteC_ann: Annual change, %, {a} – {b}
+eu.noteC_idx: Index (2015 = 100), {a} – {b}
+eu.noteQ_ann: Annual change at {b}
+eu.noteQ_chg: Change from {a} to {b}
+eu.noteQ_idx: Index (2015 = 100) at {b}
+eu.sliderFrom: From
+eu.sliderTo: To
+eu.optsAll: Chart options
+eu.optsBar: Bar options
+eu.optLab: Labels
+eu.optAvg: Average
+eu.sortVal: By value
+eu.sortAlpha: Alphabetical
+eu.thCountry: Country
+eu.thQuarter: Quarter
+eu.markAll: Mark all
+eu.unmarkAll: Unmark all
+eu.search: Search country
+eu.showMore: Show {n} more
+eu.showLess: Show less
+eu.noData: No data
+eu.rank: No. {r} of {n}
+eu.geo.AT: Austria
+eu.geo.BE: Belgium
+eu.geo.BG: Bulgaria
+eu.geo.HR: Croatia
+eu.geo.CY: Cyprus
+eu.geo.CZ: Czechia
+eu.geo.DK: Denmark
+eu.geo.EE: Estonia
+eu.geo.FI: Finland
+eu.geo.FR: France
+eu.geo.DE: Germany
+eu.geo.GR: Greece
+eu.geo.HU: Hungary
+eu.geo.IE: Ireland
+eu.geo.IT: Italy
+eu.geo.LV: Latvia
+eu.geo.LT: Lithuania
+eu.geo.LU: Luxembourg
+eu.geo.MT: Malta
+eu.geo.NL: Netherlands
+eu.geo.PL: Poland
+eu.geo.PT: Portugal
+eu.geo.RO: Romania
+eu.geo.SK: Slovakia
+eu.geo.SI: Slovenia
+eu.geo.ES: Spain
+eu.geo.SE: Sweden
+eu.geo.CH: Switzerland
+eu.geo.IS: Iceland
+eu.geo.NO: Norway
+eu.geo.TR: Türkiye
+eu.geo.UK: United Kingdom
+eu.geo.EU27_2020: EU-27
+eu.geo.EA21: Euro area
