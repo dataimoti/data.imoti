@@ -76,7 +76,7 @@ h1 { margin: 0 0 2px; font-size: 17px; line-height: 1.2; font-weight: 700; lette
 .presets { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 10px; font-weight: 600; color: var(--ink2); }
 .chip:hover { background: var(--chip); color: var(--ink); }
-.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.chip[aria-pressed="true"] { background: var(--chip2); border-color: var(--line); color: var(--ink); }
 .info-btn { flex: none; width: 24px; height: 24px; border-radius: 50%; border: 1px solid #1e9a4b; background: #1e9a4b; color: #fff; font-weight: 700; font-size: 11.5px; line-height: 1; }
 .info-btn:hover, .info-btn[aria-expanded="true"] { background: #17803d; border-color: #17803d; color: #fff; }
 .pop { position: absolute; z-index: 5; right: 0; top: 100%; width: min(380px, calc(100vw - 48px)); background: var(--surface); border: 1px solid var(--line);
@@ -123,7 +123,7 @@ h1 { margin: 0 0 2px; font-size: 17px; line-height: 1.2; font-weight: 700; lette
 .tools { display: flex; gap: 4px; }
 .tool { width: 26px; height: 19px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink2); padding: 0; }
 .tool:hover { background: var(--chip); color: var(--ink); }
-.tool[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.tool[aria-pressed="true"] { background: var(--chip2); border-color: var(--line); color: var(--ink); }
 .tool svg { width: 12px; height: 12px; }
 
 .tablecard { margin-top: 10px; }
@@ -208,8 +208,8 @@ html { scroll-padding-top: 76px; }
 /* ===== Eurostat ===== */
 #v-euro .block { margin-bottom: 28px; }
 .etabs { display: flex; gap: 4px; margin: 0 0 -1px 12px; position: relative; z-index: 1; flex-wrap: wrap; }
-.etab { display: flex; align-items: center; gap: 7px; padding: 7px 16px; border: 1px solid var(--line); border-bottom: 0; border-top: 3px solid var(--dash); border-radius: 8px 8px 0 0; background: var(--chip); color: var(--ink2); font-size: 11.5px; font-weight: 600; }
-.etab:hover { color: var(--ink); background: var(--chip2); }
+.etab { display: flex; align-items: center; gap: 7px; padding: 7px 16px; border: 1px solid var(--line); border-bottom: 0; border-top: 3px solid var(--dash); border-radius: 8px 8px 0 0; background: var(--surface); color: var(--ink2); font-size: 11.5px; font-weight: 600; }
+.etab:hover { color: var(--ink); background: var(--chip); }
 .etab[aria-selected="true"] { background: var(--surface); color: var(--ink); border-top-color: var(--s1); }
 .etab svg { width: 13px; height: 13px; }
 .card.etabbed { border-top-left-radius: 0; position: relative; }
@@ -274,6 +274,10 @@ sup.pf { font-size: 8px; color: var(--muted); margin-left: 1px; }
 .emapwrap .elegend span { min-width: 0; text-align: left; }
 .ezoomb { top: 8px; right: 8px; }
 @media (max-width: 760px) { .emapwrap { flex-direction: column; } .emapwrap .elegend { flex: none; flex-direction: row; width: 100%; } .emapwrap .elegend span { flex: 1 1 auto; text-align: center; } }
+
+.seg.txt button[aria-pressed="true"] { background: var(--chip2); color: var(--ink); }
+.etab[aria-selected="true"], .etab[aria-selected="true"]:hover { background: var(--chip2); color: var(--ink); border-top-color: var(--s1); }
+#euroBlocks .chip[aria-pressed="true"], #euroBlocks .tool[aria-pressed="true"] { background: var(--chip2); border-color: var(--line); color: var(--ink); }
 </style>
 <script>try{var __t=localStorage.getItem("theme");if(__t==="dark"||__t==="light")document.documentElement.setAttribute("data-theme",__t)}catch(e){}</script>
 
@@ -1283,7 +1287,7 @@ class EuroBlock {
     this.updateSlider();
   }
   setTab(t) { if (t === this.S.tab) return; this.S.tab = t; this.S.more = false; this.afterChange(true); }
-  afterChange(full) { if (full) { this.paintControls(); } this.renderTab(); this.buildTable(); }
+  afterChange(full) { if (full) { this.paintControls(); this.r("tabs").querySelectorAll(".etab").forEach((b, i) => b.setAttribute("aria-selected", String(EU_TABS[i] === this.S.tab))); } this.renderTab(); this.buildTable(); }
   setWindow(i, j) {
     const S = this.S; if (i > j) [i, j] = [j, i]; i = Math.max(0, i); j = Math.min(this.N - 1, j);
     if (j - i < 1) { if (j < this.N - 1) j = i + 1; else i = j - 1; }
