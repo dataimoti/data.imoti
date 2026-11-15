@@ -290,6 +290,19 @@ sup.pf { font-size: 8px; color: var(--muted); margin-left: 1px; }
 .etab:hover { background: var(--chip2); color: var(--ink); }
 .etab[aria-selected="true"], .etab[aria-selected="true"]:hover { background: var(--surface); color: var(--ink); border-color: var(--line); border-top-color: var(--s1); }
 .card.etabbed { border-top-left-radius: 0; }
+
+@media (max-width: 760px) {
+  .emapwrap { align-items: stretch; }
+  .emapbox { flex: none; width: 100%; max-width: none; }
+  .emapwrap .elegend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+  .emapwrap .elegend span { text-align: center; padding: 4px 4px; font-size: 10.5px; }
+}
+
+.econtrols { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; min-width: 0; }
+.econtrols .seg { max-width: 100%; flex-wrap: wrap; }
+#euroBlocks .block, #euroBlocks .plot, #euroBlocks .head { min-width: 0; }
+
+@media (max-width: 900px) { .shell { grid-template-columns: minmax(0, 1fr); } .etabs { flex-wrap: wrap; } .etab { padding: 7px 12px; } #euroBlocks .sub { overflow-wrap: anywhere; } }
 </style>
 <script>try{var __t=localStorage.getItem("theme");if(__t==="dark"||__t==="light")document.documentElement.setAttribute("data-theme",__t)}catch(e){}</script>
 
@@ -1160,7 +1173,7 @@ const EU_MEMBERS = ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", 
 const EU_OTHERS = ["EU27_2020", "EA21", "NO", "IS", "CH", "UK", "TR"];
 const EU_DEF_CHART = ["BG", "EU27_2020", "RO", "GR", "DE", "HR", "ES"];
 const EU_PAL = ["#cc650f", "#2f8f6b", "#9b59b6", "#d4a017", "#d6336c", "#0e8fa8", "#7a5c3e", "#5c6bc0", "#6a9a1f", "#b0413e", "#8a9099"];
-const EU_MAPPAL = ["#fbe6c6", "#f0c27e", "#e8a43b", "#d9822b", "#c0571c", "#8f3a0f"];
+const EU_MAPPAL = ["#fdeea6", "#c9e7b3", "#74cdb8", "#3fb1cc", "#1f69b3", "#13296b"];
 const EU_SMALL = { BE: 1, NL: 1, SI: 1, HR: 1, AT: 1, SK: 1, LT: 1, LV: 1, EE: 1, CH: 1, DK: 1 };
 const EU_TABS = ["map", "chart", "bar"];
 const EU_METRICS = { map: ["chg", "idx"], bar: ["chg", "idx"], chart: ["ann", "idx"] };
@@ -1419,7 +1432,7 @@ class EuroBlock {
   renderMap(body) {
     const m = this.metric, S = this.S, shown = new Set(this.shown().filter((g) => EG.paths[g])), vals = {}, ex = (s) => s;
     shown.forEach((g) => { vals[g] = this.val(g); });
-    const th = this.bins(Object.values(vals)), nb = th.length + 1, palFor = (i) => EU_MAPPAL[nb === 6 ? i : Math.round((i * 5) / Math.max(1, nb - 1))];
+    const th = this.bins(Object.values(vals)), nb = th.length + 1, pidx = (i) => (nb === 6 ? i : Math.round((i * 5) / Math.max(1, nb - 1))), palFor = (i) => EU_MAPPAL[pidx(i)];
     const bi = (v) => { let i = 0; while (i < th.length && v >= th[i]) i++; return i; };
     const ink = "#17191d", W = EG.W, H = EG.H, A = EG.anchors, ui = css("--font-ui"), mono = css("--font-num");
     let svg = '<svg class="emap" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + escH(T["eu.title"]) + '" font-family="' + ui.replace(/"/g, "'") + '"><rect x="-800" y="-800" width="' + (W + 1600) + '" height="' + (H + 1600) + '" fill="' + css("--chip") + '"/><path d="' + EG.ctx + '" fill="' + css("--chip2") + '" stroke="' + css("--surface") + '" stroke-width=".7"/>';
@@ -1429,14 +1442,14 @@ class EuroBlock {
     });
     Object.keys(vals).forEach((g) => {
       const v = vals[g], a = A[g]; if (v == null || !a || g === "LU") return;
-      const dark = bi(v) >= 3, tc = dark ? "#fff" : ink, big = !EU_SMALL[g] && g !== "CY" && g !== "MT", fs = big ? 11.5 : 9, vs = this.fmtV(m, v, m === "chg" && Math.abs(v) >= 100 ? 0 : 1);
+      const dark = pidx(bi(v)) >= 4, tc = dark ? "#fff" : ink, big = !EU_SMALL[g] && g !== "CY" && g !== "MT", fs = big ? 11.5 : 9, vs = this.fmtV(m, v, m === "chg" && Math.abs(v) >= 100 ? 0 : 1);
       if (g === "MT") { svg += '<text x="' + (a[0] + 10) + '" y="' + (a[1] + 3.5) + '" font-size="9.5" font-weight="700" fill="' + ink + '" pointer-events="none">MT ' + vs + "</text>"; return; }
       if (g === "CY") { svg += '<text x="' + a[0] + '" y="' + (a[1] + 16) + '" text-anchor="middle" font-size="9.5" font-weight="700" fill="' + ink + '" pointer-events="none">CY ' + vs + "</text>"; return; }
       svg += '<text x="' + a[0] + '" y="' + (a[1] - 1) + '" text-anchor="middle" font-size="' + fs + '" font-weight="700" fill="' + tc + '" pointer-events="none">' + g + '</text><text x="' + a[0] + '" y="' + (a[1] + fs) + '" text-anchor="middle" font-size="' + (fs - 1.5) + '" font-family="' + mono.replace(/"/g, "'") + '" fill="' + tc + '" pointer-events="none">' + vs + "</text>";
     });
     svg += "</svg>";
     let lg = '<div class="elegend" role="list">'; const fm = (x) => this.fmtV(m, x, m === "ann" || Math.abs(x) < 30 ? 1 : 0);
-    for (let i = 0; i < nb; i++) lg += '<span role="listitem" class="' + (i >= 3 ? "dk" : "") + '" style="background:' + palFor(i) + '">' + (nb === 1 ? "" : i === 0 ? "< " + fm(th[0]) : i === nb - 1 ? "≥ " + fm(th[i - 1]) : fm(th[i - 1]) + " – " + fm(th[i])) + "</span>";
+    for (let i = 0; i < nb; i++) lg += '<span role="listitem" class="' + (pidx(i) >= 4 ? "dk" : "") + '" style="background:' + palFor(i) + '">' + (nb === 1 ? "" : i === 0 ? "< " + fm(th[0]) : i === nb - 1 ? "≥ " + fm(th[i - 1]) : fm(th[i - 1]) + " – " + fm(th[i])) + "</span>";
     lg += '<span role="listitem" style="background:' + css("--chip2") + '">' + escH(T["eu.noData"]) + "</span></div>";
     body.innerHTML = '<div class="emapwrap"><div class="emapbox">' + svg + "</div>" + lg + "</div>";
     const tip = (this.tip = document.createElement("div")); tip.className = "etip"; tip.hidden = true; body.append(tip);
