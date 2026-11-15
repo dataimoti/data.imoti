@@ -318,6 +318,7 @@ sup.pf { font-size: 8px; color: var(--muted); margin-left: 1px; }
 .fly button[aria-current="true"] { background: var(--chip2); font-weight: 600; }
 .fly button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
 @media (prefers-reduced-motion: reduce) { .fly { transition: none; transform: none; } }
+#euroBlocks .block + .block { margin-top: 56px; }
 </style>
 <script>try{var __t=localStorage.getItem("theme");if(__t==="dark"||__t==="light")document.documentElement.setAttribute("data-theme",__t)}catch(e){}</script>
 
@@ -1183,6 +1184,7 @@ async function ensureBnb() {
 }
 
 
+
 /* ============ EUROSTAT: цени на жилищата в Европа (изглед eurostat_series, файл europe.json за картата) ============ */
 const EU_MEMBERS = ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE"];
 const EU_OTHERS = ["EU27_2020", "EA21", "NO", "IS", "CH", "UK", "TR"];
@@ -1192,12 +1194,16 @@ const EU_MAPPAL = ["#fdeea6", "#c9e7b3", "#74cdb8", "#3fb1cc", "#1f69b3", "#1329
 const EU_SMALL = { BE: 1, NL: 1, SI: 1, HR: 1, AT: 1, SK: 1, LT: 1, LV: 1, EE: 1, CH: 1, DK: 1 };
 const EU_TABS = ["map", "chart", "bar"];
 const EU_METRICS = { map: ["chg", "idx"], bar: ["chg", "idx"], chart: ["ann", "idx"] };
-let ED = null, EG = null, euroBlocks = [], euroState = "idle";
+const EU_SETS = [
+  { p: "eu", dataset: "prc_hpi_q", ppy: 4, uIdx: "I15_Q", items: ["TOTAL", "DW_NEW", "DW_EXST"], file: "eurostat-hpi", monthly: false },
+  { p: "hi", dataset: "prc_hicp_minr", ppy: 12, uIdx: "I15_M", items: ["TOTAL", "FOOD"], file: "eurostat-hicp", monthly: true }
+];
+let EG = null, euroBlocks = [], euroState = "idle";
 const qlab = (p) => p.slice(0, 4) + "-Q" + (Math.floor((+p.slice(5, 7) - 1) / 3) + 1);
 const escH = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-async function loadEuro() {
-  const url = CONFIG.supabaseUrl.replace(/\/$/, "") + "/rest/v1/" + CONFIG.euroView + "?select=geo,item,unit,periods,vals,flags&dataset=eq.prc_hpi_q&unit=in.(RCH_A,I15_Q)&limit=1000";
+async function loadEuro(cfg) {
+  const url = CONFIG.supabaseUrl.replace(/\/$/, "") + "/rest/v1/" + CONFIG.euroView + "?select=geo,item,unit,periods,vals,flags&dataset=eq." + cfg.dataset + "&unit=in.(RCH_A," + cfg.uIdx + ")&limit=1000";
   const res = await fetch(url, { headers: { apikey: CONFIG.anonKey, Authorization: "Bearer " + CONFIG.anonKey } });
   if (!res.ok) throw new Error("Supabase " + res.status + ": " + (await res.text()).slice(0, 200));
   const rows = await res.json();
@@ -1240,20 +1246,28 @@ const EU_TABICON = {
 };
 
 class EuroBlock {
-  constructor(host) {
-    this.p = "eu"; this.charts = []; this.tip = null;
+  constructor(host, cfg, D) {
+    this.p = cfg.p; this.cfg = cfg; this.D = D; this.charts = []; this.tip = null;
     this.root = document.createElement("div"); this.root.className = "block"; this.root.innerHTML = EU_HTML; host.append(this.root);
     this.ro = new ResizeObserver(() => this.charts.forEach((c) => c.inst.resize()));
     const r = (this.r = (n) => this.root.querySelector('[data-r="' + n + '"]'));
     r("infoBtn").onclick = (e) => { e.stopPropagation(); closeMenus(); allBlocks().forEach((b) => b !== this && b.togglePop(false)); this.togglePop(r("pop").hidden); };
-    this.avail = ED.geos.filter((g) => EU_MEMBERS.includes(g) || EU_OTHERS.includes(g));
+    this.avail = this.D.geos.filter((g) => EU_MEMBERS.includes(g) || EU_OTHERS.includes(g));
   }
-  get N() { return ED.P.length; }
-  gname(g) { return T["eu.geo." + g]; }
+  get lastIdx() {
+    const it = this.S.item, u = this.cfg.uIdx; this._li = this._li || {}; if (this._li[it] != null) return this._li[it];
+    const gs = this.avail.filter((g) => this.D.S[g + "|" + it + "|" + u]); let li = this.N - 1;
+    for (; li > 0; li--) { let c = 0; gs.forEach((g) => { if (this.D.S[g + "|" + it + "|" + u][li] != null) c++; }); if (c >= gs.length * 0.3) break; }
+    return (this._li[it] = li);
+  }
+  tx(key) { const k = this.p + "." + key; return k in TEXTS[LANG] ? T[k] : T["eu." + key]; }
+  lab(p) { return this.cfg.monthly ? String(p).slice(0, 7) : qlab(p); }
+  get N() { return this.D.P.length; }
+  gname(g) { return this.tx("geo." + g); }
   togglePop(open) { const pop = this.r("pop"); pop.hidden = !open; this.r("infoBtn").setAttribute("aria-expanded", String(open)); }
   start() {
     const N = this.N, mem = this.avail.filter((g) => EU_MEMBERS.includes(g));
-    this.S = { tab: "map", metric: { map: "chg", chart: "ann", bar: "chg" }, item: "TOTAL", from: Math.max(0, N - 1 - 40), to: N - 1, kind: "line", lab: true, avg: false, sort: "val", q: "", more: false,
+    this.S = { tab: "map", metric: { map: "chg", chart: "ann", bar: "chg" }, item: "TOTAL", from: Math.max(0, N - 1 - 10 * this.cfg.ppy), to: N - 1, kind: "line", lab: true, avg: false, sort: "val", q: "", more: false,
       sel: { map: new Set(this.avail), chart: new Set(EU_DEF_CHART.filter((g) => this.avail.includes(g))), bar: new Set([...mem, ...(this.avail.includes("EU27_2020") ? ["EU27_2020"] : [])]) } };
     this.buildSlider(); this.repaint();
   }
@@ -1263,12 +1277,12 @@ class EuroBlock {
   repaint() { this.paint(); this.renderTab(); this.buildTable(); }
 
   /* ---------- данни ---------- */
-  ser(g, unit) { return ED.S[g + "|" + this.S.item + "|" + unit]; }
-  has(g) { const a = this.ser(g, "I15_Q"); return !!a && a.some((v) => v != null); }
+  ser(g, unit) { return this.D.S[g + "|" + this.S.item + "|" + unit]; }
+  has(g) { const a = this.ser(g, this.cfg.uIdx); return !!a && a.some((v) => v != null); }
   val(g, m, from, to) {
-    m = m || this.metric; from = from ?? this.S.from; to = to ?? this.S.to;
+    m = m || this.metric; from = from ?? this.S.from; to = to ?? (m === "ann" ? this.S.to : Math.min(this.S.to, this.lastIdx));
     if (m === "ann") { const a = this.ser(g, "RCH_A"); return a ? a[to] : null; }
-    const a = this.ser(g, "I15_Q"); if (!a) return null;
+    const a = this.ser(g, this.cfg.uIdx); if (!a) return null;
     if (m === "idx") return a[to];
     return a[from] == null || a[to] == null ? null : (a[to] / a[from] - 1) * 100;
   }
@@ -1292,14 +1306,14 @@ class EuroBlock {
   /* ---------- текстове, контроли ---------- */
   paint() {
     const r = this.r, S = this.S;
-    r("title").textContent = T["eu.title"]; r("sub").textContent = T["eu.sub"]; r("tableTitle").textContent = T["eu.tblTitle"]; r("foot").textContent = T["eu.foot"];
+    r("title").textContent = this.tx("title"); r("sub").textContent = this.tx("sub"); r("tableTitle").textContent = this.tx("tblTitle"); r("foot").textContent = this.tx("foot");
     r("infoBtn").setAttribute("aria-label", T.infoBtn); r("pop").setAttribute("aria-label", T.infoBtn);
     const tabs = r("tabs"); tabs.innerHTML = "";
-    EU_TABS.forEach((t) => { const b = document.createElement("button"); b.className = "etab"; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", String(S.tab === t)); b.innerHTML = EU_TABICON[t]; b.append(T["eu.tab_" + t]); b.onclick = () => this.setTab(t); tabs.append(b); });
+    EU_TABS.forEach((t) => { const b = document.createElement("button"); b.className = "etab"; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", String(S.tab === t)); b.innerHTML = EU_TABICON[t]; b.append(this.tx("tab_" + t)); b.onclick = () => this.setTab(t); tabs.append(b); });
     const pop = r("pop"); pop.textContent = "";
     const h3 = document.createElement("h3"); h3.textContent = T.infoTitle; pop.append(h3);
-    for (let i = 1; i < 9 && ("eu.info" + i + ".h") in TEXTS[LANG]; i++) { const a = document.createElement("h4"); a.textContent = T["eu.info" + i + ".h"]; const q = document.createElement("p"); q.textContent = T["eu.info" + i + ".p"]; pop.append(a, q); }
-    const a = document.createElement("a"); a.href = T["eu.srcUrl"]; a.target = "_blank"; a.rel = "noopener"; a.textContent = T["eu.srcLabel"]; const q = document.createElement("p"); q.style.marginTop = "10px"; q.append(a); pop.append(q);
+    for (let i = 1; i < 9 && (this.p + ".info" + i + ".h") in TEXTS[LANG]; i++) { const a = document.createElement("h4"); a.textContent = this.tx("info" + i + ".h"); const q = document.createElement("p"); q.textContent = this.tx("info" + i + ".p"); pop.append(a, q); }
+    const a = document.createElement("a"); a.href = this.tx("srcUrl"); a.target = "_blank"; a.rel = "noopener"; a.textContent = this.tx("srcLabel"); const q = document.createElement("p"); q.style.marginTop = "10px"; q.append(a); pop.append(q);
     this.paintControls(); this.paintPresets();
   }
   paintControls() {
@@ -1310,20 +1324,20 @@ class EuroBlock {
       items.forEach(([k, tx]) => { const b = document.createElement("button"); b.textContent = tx; b.setAttribute("aria-pressed", String(cur === k)); b.onclick = () => fn(k); g.append(b); });
       ctl.append(l, g);
     };
-    group(T["eu.lblMetric"], EU_METRICS[S.tab].map((m) => [m, T["eu.m_" + m]]), this.metric, (m) => { S.metric[S.tab] = m; this.afterChange(true); });
-    group(T["eu.lblItem"], ["TOTAL", "DW_NEW", "DW_EXST"].map((k) => [k, T["eu.i_" + k]]), S.item, (k) => { S.item = k; this.afterChange(true); });
+    group(this.tx("lblMetric"), EU_METRICS[S.tab].map((m) => [m, this.tx("m_" + m)]), this.metric, (m) => { S.metric[S.tab] = m; this.afterChange(true); });
+    group(this.tx("lblItem"), this.cfg.items.map((k) => [k, this.tx("i_" + k)]), S.item, (k) => { S.item = k; this.afterChange(true); });
   }
   paintPresets() {
     const pr = this.r("presets"), N = this.N; pr.innerHTML = "";
-    [[T.p1, 4], [T.p3, 12], [T.p5, 20], [T.p10, 40], [T.pAll, N - 1]].forEach(([tx, n]) => {
+    [[T.p1, this.cfg.ppy], [T.p3, 3 * this.cfg.ppy], [T.p5, 5 * this.cfg.ppy], [T.p10, 10 * this.cfg.ppy], [T.pAll, N - 1]].forEach(([tx, n]) => {
       const b = document.createElement("button"); b.className = "chip"; b.textContent = tx; b.dataset.n = n; b.setAttribute("aria-pressed", "false"); b.onclick = () => this.setWindow(Math.max(0, N - 1 - n), N - 1); pr.append(b);
     });
   }
   syncControls() {
-    const S = this.S, N = this.N, P = ED.P, m = this.metric, tab = this.tab;
+    const S = this.S, N = this.N, P = this.D.P, m = this.metric, tab = this.tab;
     this.root.querySelectorAll(".presets .chip").forEach((c) => c.setAttribute("aria-pressed", String(S.to === N - 1 && S.to - S.from === Math.min(N - 1, +c.dataset.n))));
     this.r("presets").hidden = this.single;
-    this.r("note").textContent = (tab === "chart" ? T["eu.noteC_" + m] : T["eu.noteQ_" + m]).replace("{a}", qlab(P[S.from])).replace("{b}", qlab(P[S.to]));
+    this.r("note").textContent = (tab === "chart" ? this.tx("noteC_" + m) : this.tx("noteQ_" + m)).replace("{a}", this.lab(P[S.from])).replace("{b}", this.lab(P[tab !== "chart" && m !== "ann" ? Math.min(S.to, this.lastIdx) : S.to]));
     this.updateSlider();
   }
   setTab(t) { if (t === this.S.tab) return; this.S.tab = t; this.S.more = false; this.afterChange(true); }
@@ -1338,7 +1352,7 @@ class EuroBlock {
   buildSlider() {
     const host = this.r("slider"), N = this.N;
     host.innerHTML = '<div class="trk"><svg viewBox="0 0 100 22" preserveAspectRatio="none" aria-hidden="true"><polyline fill="none" vector-effect="non-scaling-stroke" stroke-width="1" stroke="var(--muted)"></polyline></svg><div class="fill"></div></div><button class="hd l" type="button"></button><button class="hd r" type="button"></button><span class="lb1"></span><span class="lb2"></span>';
-    const a = ED.S["BG|TOTAL|I15_Q"] || Object.values(ED.S)[0], vs = a.map((v) => (v == null ? null : v)), nz = vs.filter((v) => v != null), mn = Math.min(...nz), mx = Math.max(...nz);
+    const a = this.D.S["BG|TOTAL|" + this.cfg.uIdx] || Object.values(this.D.S)[0], vs = a.map((v) => (v == null ? null : v)), nz = vs.filter((v) => v != null), mn = Math.min(...nz), mx = Math.max(...nz);
     host.querySelector("polyline").setAttribute("points", vs.map((v, i) => (v == null ? null : (i * 100 / (N - 1)).toFixed(2) + "," + (20 - ((v - mn) / (mx - mn || 1)) * 18).toFixed(1))).filter(Boolean).join(" "));
     const trk = host.querySelector(".trk"), S = () => this.S, idxAt = (x) => { const b = trk.getBoundingClientRect(); return Math.round(Math.min(1, Math.max(0, (x - b.left) / b.width)) * (N - 1)); };
     const drag = (which) => (e) => {
@@ -1358,12 +1372,12 @@ class EuroBlock {
     host.querySelector(".hd.l").addEventListener("keydown", key("l")); host.querySelector(".hd.r").addEventListener("keydown", key("r"));
   }
   updateSlider() {
-    const host = this.r("slider"), N = this.N, S = this.S, P = ED.P, pc = (i) => (i * 100) / (N - 1);
+    const host = this.r("slider"), N = this.N, S = this.S, P = this.D.P, pc = (i) => (i * 100) / (N - 1);
     host.classList.toggle("single", this.single);
     const l = host.querySelector(".hd.l"), rr = host.querySelector(".hd.r"), f = host.querySelector(".fill"), b1 = host.querySelector(".lb1"), b2 = host.querySelector(".lb2");
     l.style.left = pc(S.from) + "%"; rr.style.left = pc(S.to) + "%"; f.style.left = pc(S.from) + "%"; f.style.width = pc(S.to) - pc(S.from) + "%";
-    l.setAttribute("aria-label", T["eu.sliderFrom"] + " " + qlab(P[S.from])); rr.setAttribute("aria-label", T["eu.sliderTo"] + " " + qlab(P[S.to]));
-    b1.textContent = qlab(P[S.from]); b1.style.left = "calc(" + pc(S.from) + "% + 10px)"; b2.textContent = qlab(P[S.to]); b2.style.left = "calc(" + pc(S.to) + "% - 52px)";
+    l.setAttribute("aria-label", this.tx("sliderFrom") + " " + this.lab(P[S.from])); rr.setAttribute("aria-label", this.tx("sliderTo") + " " + this.lab(P[S.to]));
+    b1.textContent = this.lab(P[S.from]); b1.style.left = "calc(" + pc(S.from) + "% + 10px)"; b2.textContent = this.lab(P[S.to]); b2.style.left = "calc(" + pc(S.to) + "% - 52px)";
   }
 
   /* ---------- съдържание по листове ---------- */
@@ -1374,31 +1388,31 @@ class EuroBlock {
     if (this.tab === "map") this.renderMap(body); else if (this.tab === "chart") this.renderChart(body); else this.renderBar(body);
   }
   mkChart(body, h) {
-    const el = document.createElement("div"); el.className = "cv"; el.setAttribute("role", "img"); el.setAttribute("aria-label", T["eu.title"]); if (h) el.style.height = h + "px"; body.append(el);
+    const el = document.createElement("div"); el.className = "cv"; el.setAttribute("role", "img"); el.setAttribute("aria-label", this.tx("title")); if (h) el.style.height = h + "px"; body.append(el);
     const inst = echarts.init(el, null, { renderer: "canvas" }); this.charts.push({ inst, el }); this.ro.observe(el); return inst;
   }
   buildOptRow() {
     const row = this.r("optrow"), S = this.S; row.innerHTML = "";
     if (this.tab === "map") { row.hidden = true; return; } row.hidden = false;
-    const lab = document.createElement("b"); lab.textContent = this.tab === "chart" ? T["eu.optsAll"] : T["eu.optsBar"]; const box = document.createElement("div"); box.className = "eopts";
+    const lab = document.createElement("b"); lab.textContent = this.tab === "chart" ? this.tx("optsAll") : this.tx("optsBar"); const box = document.createElement("div"); box.className = "eopts";
     const add = (icon, title, on, fn) => { const b = document.createElement("button"); b.className = "tool"; b.innerHTML = icon; b.append(title); b.setAttribute("aria-pressed", String(on)); b.onclick = fn; box.append(b); };
     if (this.tab === "chart") {
       add(ICON.bar, T.labBar, S.kind === "bar", () => { S.kind = "bar"; this.renderTab(); });
       add(ICON.line, T.labLine, S.kind === "line", () => { S.kind = "line"; this.renderTab(); });
-      add(ICON.tag, T["eu.optLab"], S.lab, () => { S.lab = !S.lab; this.renderTab(); });
-      add(ICON.avg, T["eu.optAvg"], S.avg, () => { S.avg = !S.avg; this.renderTab(); });
+      add(ICON.tag, this.tx("optLab"), S.lab, () => { S.lab = !S.lab; this.renderTab(); });
+      add(ICON.avg, this.tx("optAvg"), S.avg, () => { S.avg = !S.avg; this.renderTab(); });
     } else {
-      add(ICON.bar, T["eu.sortVal"], S.sort === "val", () => { S.sort = "val"; this.renderTab(); });
-      add(ICON.line, T["eu.sortAlpha"], S.sort === "alpha", () => { S.sort = "alpha"; this.renderTab(); });
-      add(ICON.tag, T["eu.optLab"], S.lab, () => { S.lab = !S.lab; this.renderTab(); });
+      add(ICON.bar, this.tx("sortVal"), S.sort === "val", () => { S.sort = "val"; this.renderTab(); });
+      add(ICON.line, this.tx("sortAlpha"), S.sort === "alpha", () => { S.sort = "alpha"; this.renderTab(); });
+      add(ICON.tag, this.tx("optLab"), S.lab, () => { S.lab = !S.lab; this.renderTab(); });
     }
     row.append(lab, box);
   }
   axFmt(v) { const m = this.metric, s = String(+v.toFixed(2)).replace(".", LANG === "en" ? "." : ","); return m === "idx" ? s : s + "%"; }
 
   renderChart(body) {
-    const S = this.S, m = this.metric, unit = m === "idx" ? "I15_Q" : "RCH_A", P = ED.P, ids = [], labels = [];
-    for (let i = S.from; i <= S.to; i++) { ids.push(i); labels.push(qlab(P[i])); }
+    const S = this.S, m = this.metric, unit = m === "idx" ? this.cfg.uIdx : "RCH_A", P = this.D.P, ids = [], labels = [];
+    for (let i = S.from; i <= S.to; i++) { ids.push(i); labels.push(this.lab(P[i])); }
     const list = this.shown(), ink = css("--ink"), muted = css("--muted"), surf = css("--surface"), mono = css("--font-num"), ui = css("--font-ui"), n = ids.length;
     const series = list.map((g) => {
       const color = this.colorOf(g), arr = this.ser(g, unit), data = ids.map((i) => (arr ? arr[i] : null)), isBar = S.kind === "bar", nm = this.gname(g);
@@ -1450,7 +1464,7 @@ class EuroBlock {
     const th = this.bins(Object.values(vals)), nb = th.length + 1, pidx = (i) => (nb === 6 ? i : Math.round((i * 5) / Math.max(1, nb - 1))), palFor = (i) => EU_MAPPAL[pidx(i)];
     const bi = (v) => { let i = 0; while (i < th.length && v >= th[i]) i++; return i; };
     const ink = "#17191d", W = EG.W, H = EG.H, A = EG.anchors, ui = css("--font-ui"), mono = css("--font-num");
-    let svg = '<svg class="emap" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + escH(T["eu.title"]) + '" font-family="' + ui.replace(/"/g, "'") + '"><rect x="-800" y="-800" width="' + (W + 1600) + '" height="' + (H + 1600) + '" fill="' + css("--chip") + '"/><path d="' + EG.ctx + '" fill="' + css("--chip2") + '" stroke="' + css("--surface") + '" stroke-width=".7"/>';
+    let svg = '<svg class="emap" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + escH(this.tx("title")) + '" font-family="' + ui.replace(/"/g, "'") + '"><rect x="-800" y="-800" width="' + (W + 1600) + '" height="' + (H + 1600) + '" fill="' + css("--chip") + '"/><path d="' + EG.ctx + '" fill="' + css("--chip2") + '" stroke="' + css("--surface") + '" stroke-width=".7"/>';
     Object.keys(EG.paths).forEach((g) => {
       const on = shown.has(g) && vals[g] != null, fill = on ? palFor(bi(vals[g])) : css("--chip2");
       svg += '<path data-g="' + g + '" d="' + EG.paths[g] + '" fill="' + fill + '" stroke="' + (on ? ink : css("--surface")) + '" stroke-width="' + (on ? (g === "BG" ? 1.6 : 0.6) : 0.5) + '" stroke-linejoin="round" tabindex="' + (on ? 0 : -1) + '"' + (on ? ' aria-label="' + escH(this.gname(g) + " " + this.fmtV(m, vals[g])) + '"' : "") + "/>";
@@ -1465,14 +1479,14 @@ class EuroBlock {
     svg += "</svg>";
     let lg = '<div class="elegend" role="list">'; const fm = (x) => this.fmtV(m, x, m === "ann" || Math.abs(x) < 30 ? 1 : 0);
     for (let i = 0; i < nb; i++) lg += '<span role="listitem" class="' + (pidx(i) >= 4 ? "dk" : "") + '" style="background:' + palFor(i) + '">' + (nb === 1 ? "" : i === 0 ? "< " + fm(th[0]) : i === nb - 1 ? "≥ " + fm(th[i - 1]) : fm(th[i - 1]) + " – " + fm(th[i])) + "</span>";
-    lg += '<span role="listitem" style="background:' + css("--chip2") + '">' + escH(T["eu.noData"]) + "</span></div>";
+    lg += '<span role="listitem" style="background:' + css("--chip2") + '">' + escH(this.tx("noData")) + "</span></div>";
     body.innerHTML = '<div class="emapwrap"><div class="emapbox">' + svg + "</div>" + lg + "</div>";
     const tip = (this.tip = document.createElement("div")); tip.className = "etip"; tip.hidden = true; body.append(tip);
     const ranked = Object.entries(vals).filter(([, v]) => v != null).sort((a, b) => b[1] - a[1]), svgEl = body.querySelector("svg");
     const show = (g, x, y) => {
       if (vals[g] == null) { tip.hidden = true; return; }
       const rk = ranked.findIndex(([k]) => k === g) + 1;
-      tip.innerHTML = "<b>" + escH(this.gname(g)) + '</b><span class="v">' + this.fmtV(m, vals[g]) + "</span><br><small>" + escH(T["eu.rank"].replace("{r}", rk).replace("{n}", ranked.length)) + "</small>";
+      tip.innerHTML = "<b>" + escH(this.gname(g)) + '</b><span class="v">' + this.fmtV(m, vals[g]) + "</span><br><small>" + escH(this.tx("rank").replace("{r}", rk).replace("{n}", ranked.length)) + "</small>";
       tip.hidden = false; const br = body.getBoundingClientRect(); let left = x - br.left + 14, top = y - br.top + 14;
       if (left + tip.offsetWidth > br.width) left = x - br.left - tip.offsetWidth - 14; tip.style.left = Math.max(0, left) + "px"; tip.style.top = top + "px";
     };
@@ -1505,7 +1519,7 @@ class EuroBlock {
   }
 
   /* ---------- сваляне ---------- */
-  fname() { const S = this.S, P = ED.P; return "eurostat-hpi-" + this.tab + "-" + this.metric + "-" + qlab(P[S.from]) + "-" + qlab(P[S.to]); }
+  fname() { const S = this.S, P = this.D.P; return this.cfg.file + "-" + this.tab + "-" + this.metric + "-" + this.lab(P[S.from]) + "-" + this.lab(P[S.to]); }
   async exportPng() {
     if (this.charts[0]) { const url = this.charts[0].inst.getDataURL({ type: "png", pixelRatio: 2, backgroundColor: css("--surface") }), bin = atob(url.split(",")[1]), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type: "image/png" }); }
     const svgEl = this.r("body").querySelector("svg"), s = new XMLSerializer().serializeToString(svgEl);
@@ -1516,15 +1530,15 @@ class EuroBlock {
   async doDownload(kind) {
     try {
       if (kind === "png") { await save(await this.exportPng(), this.fname() + ".png"); return; }
-      const S = this.S, m = this.metric, P = ED.P; let head, rows;
+      const S = this.S, m = this.metric, P = this.D.P; let head, rows;
       if (this.tab === "chart") {
-        const unit = m === "idx" ? "I15_Q" : "RCH_A", list = this.shown(); head = [T["eu.thQuarter"], ...list.map((g) => this.gname(g))]; rows = [];
-        for (let i = S.from; i <= S.to; i++) rows.push([qlab(P[i]), ...list.map((g) => { const a = this.ser(g, unit); return a && a[i] != null ? a[i] : ""; })]);
+        const unit = m === "idx" ? this.cfg.uIdx : "RCH_A", list = this.shown(); head = [this.tx("thQuarter"), ...list.map((g) => this.gname(g))]; rows = [];
+        for (let i = S.from; i <= S.to; i++) rows.push([this.lab(P[i]), ...list.map((g) => { const a = this.ser(g, unit); return a && a[i] != null ? a[i] : ""; })]);
       } else {
-        head = [T["eu.thCountry"], T["eu.m_" + m] + " (" + qlab(P[S.from]) + " – " + qlab(P[S.to]) + ")"];
+        head = [this.tx("thCountry"), this.tx("m_" + m) + " (" + this.lab(P[S.from]) + " – " + this.lab(P[m === "ann" ? S.to : Math.min(S.to, this.lastIdx)]) + ")"];
         rows = this.shown().map((g) => [this.gname(g), this.val(g)]).filter((r) => r[1] != null).sort((a, b) => b[1] - a[1]);
       }
-      if (kind === "xlsx") await save(xlsxBlob(head, rows, [0, ...head.slice(1).map(() => 2)], T["eu.title"]), this.fname() + ".xlsx");
+      if (kind === "xlsx") await save(xlsxBlob(head, rows, [0, ...head.slice(1).map(() => 2)], this.tx("title")), this.fname() + ".xlsx");
       else await save(new Blob(["﻿" + [head, ...rows].map((r) => r.map((v) => (typeof v === "string" && /[,;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v)).join(",")).join("\r\n")], { type: "text/csv;charset=utf-8" }), this.fname() + ".csv");
     } catch (e) { console.error(e); flash(T.dlErr); }
   }
@@ -1541,30 +1555,30 @@ class EuroBlock {
   /* ---------- таблица с маркиране ---------- */
   setSel(fn) { fn(this.S.sel[this.tab]); this.renderTab(); this.buildTable(); }
   buildTable() {
-    const S = this.S, t = this.r("tbl"), tools = this.r("ttools"), P = ED.P, N = this.N, m = this.metric, tm = m === "idx" ? "idx" : "ann", unit = tm === "idx" ? "I15_Q" : "RCH_A", sel = S.sel[this.tab];
+    const S = this.S, t = this.r("tbl"), tools = this.r("ttools"), P = this.D.P, N = this.N, m = this.metric, tm = m === "idx" ? "idx" : "ann", unit = tm === "idx" ? this.cfg.uIdx : "RCH_A", sel = S.sel[this.tab];
     if (!tools.firstChild) {
       tools.innerHTML = '<button class="elink" data-a="all"></button><button class="elink" data-a="none"></button><input class="esearch" type="search" data-a="q">';
       tools.querySelector('[data-a="all"]').onclick = () => this.setSel((s) => this.avail.filter((g) => this.has(g) && (this.tab !== "map" || EG.paths[g] || EU_OTHERS.includes(g))).forEach((g) => s.add(g)));
       tools.querySelector('[data-a="none"]').onclick = () => this.setSel((s) => s.clear());
       tools.querySelector('[data-a="q"]').oninput = (e) => { S.q = e.target.value; this.buildTable(); const i = tools.querySelector('[data-a="q"]'); i.focus(); };
     }
-    tools.querySelector('[data-a="all"]').textContent = T["eu.markAll"]; tools.querySelector('[data-a="none"]').textContent = T["eu.unmarkAll"];
-    const si = tools.querySelector('[data-a="q"]'); si.placeholder = T["eu.search"]; si.setAttribute("aria-label", T["eu.search"]);
+    tools.querySelector('[data-a="all"]').textContent = this.tx("markAll"); tools.querySelector('[data-a="none"]').textContent = this.tx("unmarkAll");
+    const si = tools.querySelector('[data-a="q"]'); si.placeholder = this.tx("search"); si.setAttribute("aria-label", this.tx("search"));
     const q = S.q.trim().toLowerCase(), all = this.order(this.avail.filter((g) => this.has(g)));
     let list = all.filter((g) => !q || this.gname(g).toLowerCase().includes(q) || g.toLowerCase().includes(q));
     list = [...list.filter((g) => sel.has(g)), ...list.filter((g) => !sel.has(g))];
     const LIM = 16, nsel = list.filter((g) => sel.has(g)).length, cut0 = !q && !S.more && list.length > LIM, vis = cut0 ? list.slice(0, Math.max(LIM, nsel)) : list, cut = cut0 && vis.length < list.length;
     const cols = []; for (let i = N - 1; i >= Math.max(0, N - 12); i--) cols.push(i);
-    const showChg = this.tab !== "chart" && m === "chg", chgH = qlab(P[S.from]) + " → " + qlab(P[S.to]);
-    let h = '<thead><tr><th class="first">' + escH(T["eu.thCountry"]) + "</th>" + (showChg ? "<th>" + chgH + "</th>" : "") + cols.map((i) => "<th>" + qlab(P[i]) + "</th>").join("") + "</tr></thead><tbody>";
+    const showChg = this.tab !== "chart" && m === "chg", chgH = this.lab(P[S.from]) + " → " + this.lab(P[Math.min(S.to, this.lastIdx)]);
+    let h = '<thead><tr><th class="first">' + escH(this.tx("thCountry")) + "</th>" + (showChg ? "<th>" + chgH + "</th>" : "") + cols.map((i) => "<th>" + this.lab(P[i]) + "</th>").join("") + "</tr></thead><tbody>";
     vis.forEach((g) => {
-      const on = sel.has(g), c = this.colorOf(g), a = this.ser(g, unit), f = ED.F[g + "|" + S.item + "|" + unit];
+      const on = sel.has(g), c = this.colorOf(g), a = this.ser(g, unit), f = this.D.F[g + "|" + S.item + "|" + unit];
       h += '<tr class="' + (on ? "picked" : "") + '"><td class="first"><button class="erow" data-g="' + g + '" aria-pressed="' + on + '"><span class="cbx' + (on ? " on" : "") + '"' + (on ? ' style="background:' + c + '"' : "") + "></span>" + escH(this.gname(g)) + "</button></td>"
         + (showChg ? "<td><b>" + this.fmtV("chg", this.val(g, "chg"), 0) + "</b></td>" : "")
-        + cols.map((i) => "<td>" + this.fmtV(tm, a ? a[i] : null) + (f && f[i] === "p" ? '<sup class="pf">p</sup>' : "") + "</td>").join("") + "</tr>";
+        + cols.map((i) => "<td>" + this.fmtV(tm, a ? a[i] : null) + (f && f[i] ? '<sup class="pf">' + f[i] + "</sup>" : "") + "</td>").join("") + "</tr>";
     });
-    if (cut) h += '<tr><td class="first emore" colspan="' + (cols.length + 2 + (showChg ? 1 : 0)) + '"><button class="elink" data-a="more">' + escH(T["eu.showMore"].replace("{n}", list.length - vis.length)) + "</button></td></tr>";
-    else if (!q && S.more && list.length > LIM) h += '<tr><td class="first emore" colspan="' + (cols.length + 2) + '"><button class="elink" data-a="less">' + escH(T["eu.showLess"]) + "</button></td></tr>";
+    if (cut) h += '<tr><td class="first emore" colspan="' + (cols.length + 2 + (showChg ? 1 : 0)) + '"><button class="elink" data-a="more">' + escH(this.tx("showMore").replace("{n}", list.length - vis.length)) + "</button></td></tr>";
+    else if (!q && S.more && list.length > LIM) h += '<tr><td class="first emore" colspan="' + (cols.length + 2) + '"><button class="elink" data-a="less">' + escH(this.tx("showLess")) + "</button></td></tr>";
     t.innerHTML = h + "</tbody>";
     t.querySelectorAll("button.erow").forEach((b) => (b.onclick = () => { const g = b.dataset.g; this.setSel((s) => (s.has(g) ? s.delete(g) : s.add(g))); }));
     const mb = t.querySelector('[data-a="more"]'); if (mb) mb.onclick = () => { S.more = true; this.buildTable(); };
@@ -1576,8 +1590,15 @@ async function ensureEuro() {
   if (euroState === "ready" || euroState === "loading" || !TEXTS) return;
   euroState = "loading"; const host = $("euroBlocks"); showMsg(T.loading, false, null, "euroBlocks");
   if (!(CONFIG.supabaseUrl && CONFIG.anonKey)) { euroState = "idle"; showMsg(T.errNoCfg, true, null, "euroBlocks"); return; }
-  try { [ED, EG] = await Promise.all([loadEuro(), loadEuroGeo()]); } catch (e) { console.error(e); euroState = "idle"; showMsg(T.errTitle, true, String(e.message || e), "euroBlocks"); return; }
-  host.innerHTML = ""; euroBlocks = [new EuroBlock(host)]; euroBlocks.forEach((b) => b.start()); euroState = "ready";
+  try { EG = await loadEuroGeo(); } catch (e) { console.error(e); euroState = "idle"; showMsg(T.errTitle, true, String(e.message || e), "euroBlocks"); return; }
+  const res = await Promise.allSettled(EU_SETS.map((c) => loadEuro(c))), errs = [];
+  host.innerHTML = ""; euroBlocks = [];
+  res.forEach((r, i) => {
+    if (r.status === "fulfilled") { const h = document.createElement("div"); host.append(h); const b = new EuroBlock(h, EU_SETS[i], r.value); euroBlocks.push(b); b.start(); }
+    else { console.error(r.reason); errs.push(EU_SETS[i].dataset + ": " + (r.reason && r.reason.message)); }
+  });
+  if (!euroBlocks.length) { euroState = "idle"; showMsg(T.errTitle, true, errs.join("; "), "euroBlocks"); return; }
+  euroState = "ready";
 }
 
 /* ============ СТРАНИЦА ============ */
@@ -1623,9 +1644,9 @@ $("themeBtn").onclick = () => { const t = isDark() ? "light" : "dark"; document.
 document.addEventListener("click", (e) => { closeMenus(); allBlocks().forEach((b) => { const pop = b.r("pop"); if (!pop.hidden && !pop.contains(e.target)) b.togglePop(false); }); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { allBlocks().forEach((b) => b.togglePop(false)); closeMenus(); closeFly(); } });
 /* ---- подменю на страничната лента: отваря се при посочване, затваря се при отдалечаване ---- */
-const fly = $("fly"), flyNavs = [...document.querySelectorAll(".nav[data-view=agency], .nav[data-view=bnb]")];
+const fly = $("fly"), flyNavs = [...document.querySelectorAll(".nav[data-view=agency], .nav[data-view=bnb], .nav[data-view=euro]")];
 let flyView = null, tOpen = 0, tClose = 0, tHide = 0, tTouch = 0, flyTouch = false, flyAt = 0, lastPtr = "mouse";
-const listFor = (v) => (v === "agency" ? blocks : bnbBlocks);
+const listFor = (v) => (v === "agency" ? blocks : v === "bnb" ? bnbBlocks : euroBlocks);
 const flyClear = () => { clearTimeout(tOpen); clearTimeout(tClose); };
 function markActive() {
   if (fly.hidden || !flyView) return;
@@ -1669,7 +1690,7 @@ function showFly(btn) {
 flyNavs.forEach((b) => {
   b.setAttribute("aria-haspopup", "menu"); b.setAttribute("aria-expanded", "false");
   b.addEventListener("pointerenter", (e) => {
-    if (e.pointerType !== "mouse") return; if (b.dataset.view === "bnb") ensureBnb(); flyClear();
+    if (e.pointerType !== "mouse") return; if (b.dataset.view === "bnb") ensureBnb(); if (b.dataset.view === "euro") ensureEuro(); flyClear();
     if (!fly.hidden && flyView) showFly(b); else tOpen = setTimeout(() => showFly(b), 120);
   });
   b.addEventListener("pointerleave", (e) => { if (e.pointerType !== "mouse") return; clearTimeout(tOpen); tClose = setTimeout(closeFly, 250); });
@@ -1693,11 +1714,11 @@ document.querySelectorAll(".nav").forEach((b) => {
   b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") lastPtr = "key"; });
   b.onclick = () => {
     const v = b.dataset.view; goView(v);
-    if (v === "agency" || v === "bnb") { if (lastPtr === "touch" && flyView === v && !fly.hidden) closeFly(); else showFly(b); }
+    if (v === "agency" || v === "bnb" || v === "euro") { if (lastPtr === "touch" && flyView === v && !fly.hidden) closeFly(); else showFly(b); }
     else closeFly();
   };
 });
-document.addEventListener("click", (e) => { if (!e.target.closest("#fly, .nav[data-view=agency], .nav[data-view=bnb]")) closeFly(); });
+document.addEventListener("click", (e) => { if (!e.target.closest("#fly, .nav[data-view=agency], .nav[data-view=bnb], .nav[data-view=euro]")) closeFly(); });
 window.addEventListener("scroll", () => { if (fly.hidden) return; if (flyTouch && Date.now() - flyAt > 400) closeFly(); else requestAnimationFrame(markActive); }, { passive: true });
 window.addEventListener("resize", closeFly);
 const renderAll = () => { euroBlocks.forEach((b) => b.root && b.renderTab()); blocks.forEach((b) => b.charts.length && b.render()); bnbBlocks.forEach((b) => b.charts.length && b.render()); };

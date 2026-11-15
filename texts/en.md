@@ -698,3 +698,29 @@ eu.geo.EA21: Euro area
 eu.zoomIn: Zoom in
 eu.zoomOut: Zoom out
 eu.zoomReset: Reset view
+
+# ---- Eurostat: inflation (HICP) ----
+hi.title: Inflation in Europe
+hi.sub: Harmonised index of consumer prices (HICP) – comparison between countries.
+hi.foot: Source: Eurostat, table prc_hicp_minr (HICP by ECOICOP version 2). Published monthly. "e" = estimated, "d" = definition differs. The euro area is shown with 21 countries. For some countries the latest months are still missing.
+hi.tblTitle: Countries and latest months
+hi.srcUrl: https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_minr/default/table?lang=en
+hi.srcLabel: Open the table at Eurostat
+hi.info1.h: What it shows
+hi.info1.p: The Harmonised Index of Consumer Prices (HICP) tracks how the prices of goods and services bought by households change. It is used to compare inflation between EU countries.
+hi.info2.h: How to read the modes
+hi.info2.p: "Annual inflation" is the change against the same month a year earlier. "Increase over period" is the cumulative rise in prices between two chosen months, computed from the index. "Price level" is the index itself (2015 = 100).
+hi.info3.h: Limits
+hi.info3.p: Since 2026 Eurostat uses a new classification of expenditure and a new table. The latest month may be an estimate (marked "e"), and for some countries the latest months are still missing.
+hi.lblItem: Category
+hi.m_ann: Annual inflation
+hi.m_chg: Increase over period
+hi.m_idx: Price level
+hi.i_TOTAL: All items
+hi.i_FOOD: Food and non-alcoholic beverages
+hi.noteC_ann: Annual inflation, %, {a} – {b}
+hi.noteC_idx: Price index (2015 = 100), {a} – {b}
+hi.noteQ_ann: Annual inflation at {b}
+hi.noteQ_chg: Price increase from {a} to {b}
+hi.noteQ_idx: Price index (2015 = 100) at {b}
+hi.thQuarter: Month
