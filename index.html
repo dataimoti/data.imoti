@@ -1425,7 +1425,7 @@ class EuroBlock {
     let svg = '<svg class="emap" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + escH(T["eu.title"]) + '" font-family="' + ui.replace(/"/g, "'") + '"><rect x="-800" y="-800" width="' + (W + 1600) + '" height="' + (H + 1600) + '" fill="' + css("--chip") + '"/><path d="' + EG.ctx + '" fill="' + css("--chip2") + '" stroke="' + css("--surface") + '" stroke-width=".7"/>';
     Object.keys(EG.paths).forEach((g) => {
       const on = shown.has(g) && vals[g] != null, fill = on ? palFor(bi(vals[g])) : css("--chip2");
-      svg += '<path data-g="' + g + '" d="' + EG.paths[g] + '" fill="' + fill + '" stroke="' + (on ? ink : css("--surface")) + '" stroke-width="' + (on ? (g === "BG" ? 2.2 : 1.1) : 0.8) + '" stroke-linejoin="round" tabindex="' + (on ? 0 : -1) + '"' + (on ? ' aria-label="' + escH(this.gname(g) + " " + this.fmtV(m, vals[g])) + '"' : "") + "/>";
+      svg += '<path data-g="' + g + '" d="' + EG.paths[g] + '" fill="' + fill + '" stroke="' + (on ? ink : css("--surface")) + '" stroke-width="' + (on ? (g === "BG" ? 1.6 : 0.6) : 0.5) + '" stroke-linejoin="round" tabindex="' + (on ? 0 : -1) + '"' + (on ? ' aria-label="' + escH(this.gname(g) + " " + this.fmtV(m, vals[g])) + '"' : "") + "/>";
     });
     Object.keys(vals).forEach((g) => {
       const v = vals[g], a = A[g]; if (v == null || !a || g === "LU") return;
