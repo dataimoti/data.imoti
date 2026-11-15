@@ -303,6 +303,18 @@ sup.pf { font-size: 8px; color: var(--muted); margin-left: 1px; }
 #euroBlocks .block, #euroBlocks .plot, #euroBlocks .head { min-width: 0; }
 
 @media (max-width: 900px) { .shell { grid-template-columns: minmax(0, 1fr); } .etabs { flex-wrap: wrap; } .etab { padding: 7px 12px; } #euroBlocks .sub { overflow-wrap: anywhere; } }
+
+.fly { opacity: 0; transform: translateX(-4px); transition: opacity .15s ease, transform .15s ease; }
+.fly.show { opacity: 1; transform: none; }
+.fly::before { content: ""; position: absolute; left: -12px; top: 0; bottom: 0; width: 12px; }
+.fly::after { content: ""; position: absolute; left: -5px; top: 16px; width: 8px; height: 8px; background: var(--surface); border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); transform: rotate(45deg); }
+.fly.below { transform: translateY(-4px); }
+.fly.below.show { transform: none; }
+.fly.below::before { left: 0; right: 0; top: -10px; bottom: auto; width: auto; height: 10px; }
+.fly.below::after { display: none; }
+.fly button[aria-current="true"] { background: var(--chip2); font-weight: 600; }
+.fly button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+@media (prefers-reduced-motion: reduce) { .fly { transition: none; transform: none; } }
 </style>
 <script>try{var __t=localStorage.getItem("theme");if(__t==="dark"||__t==="light")document.documentElement.setAttribute("data-theme",__t)}catch(e){}</script>
 
@@ -1607,26 +1619,80 @@ $("langBtn").onclick = () => { if (TEXTS) setLang(LANG === "bg" ? "en" : "bg"); 
 $("themeBtn").onclick = () => { const t = isDark() ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("theme", t); } catch (e) {} if (TEXTS) paintShell(); };
 document.addEventListener("click", (e) => { closeMenus(); allBlocks().forEach((b) => { const pop = b.r("pop"); if (!pop.hidden && !pop.contains(e.target)) b.togglePop(false); }); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { allBlocks().forEach((b) => b.togglePop(false)); closeMenus(); closeFly(); } });
-const fly = $("fly"), closeFly = () => { fly.hidden = true; };
-function openFly(btn, list) {
-  fly.innerHTML = "";
-  list.forEach((b) => { const x = document.createElement("button"); x.setAttribute("role", "menuitem"); x.textContent = T[b.p + ".title"]; x.onclick = (e) => { e.stopPropagation(); closeFly(); b.root.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); }; fly.append(x); });
-  const r = btn.getBoundingClientRect(), mob = matchMedia("(max-width: 760px)").matches;
-  fly.style.left = (mob ? Math.max(8, r.left) : r.right + 6) + "px"; fly.style.top = (mob ? r.bottom + 6 : r.top) + "px"; fly.hidden = false;
+/* ---- подменю на страничната лента: отваря се при посочване, затваря се при отдалечаване ---- */
+const fly = $("fly"), flyNavs = [...document.querySelectorAll(".nav[data-view=agency], .nav[data-view=bnb]")];
+let flyView = null, tOpen = 0, tClose = 0, tHide = 0, lastPtr = "mouse";
+const listFor = (v) => (v === "agency" ? blocks : bnbBlocks);
+const flyClear = () => { clearTimeout(tOpen); clearTimeout(tClose); };
+function markActive() {
+  if (fly.hidden || !flyView) return;
+  const shown = !$("v-" + flyView).hidden, lim = innerHeight * 0.4; let cur = -1;
+  if (shown) listFor(flyView).forEach((bl, i) => { if (bl.root.getBoundingClientRect().top <= lim) cur = i; });
+  [...fly.children].forEach((x, i) => (i === cur ? x.setAttribute("aria-current", "true") : x.removeAttribute("aria-current")));
 }
-document.querySelectorAll(".nav").forEach((b) => (b.onclick = () => {
-  document.querySelectorAll(".nav").forEach((x) => x.removeAttribute("aria-current")); b.setAttribute("aria-current", "page");
-  ["agency", "bnb", "euro", "contacts"].forEach((v) => ($("v-" + v).hidden = v !== b.dataset.view));
-  const v = b.dataset.view;
+function closeFly() {
+  flyClear(); clearTimeout(tHide); if (fly.hidden) return;
+  fly.classList.remove("show"); flyNavs.forEach((n) => n.setAttribute("aria-expanded", "false")); flyView = null;
+  tHide = setTimeout(() => { fly.hidden = true; }, reduce ? 0 : 150);
+}
+function goView(v) {
+  document.querySelectorAll(".nav").forEach((x) => (x.dataset.view === v ? x.setAttribute("aria-current", "page") : x.removeAttribute("aria-current")));
+  ["agency", "bnb", "euro", "contacts"].forEach((w) => ($("v-" + w).hidden = w !== v));
   if (v === "bnb") ensureBnb();
-  if (v === "euro") { ensureEuro(); euroBlocks.forEach((bl) => bl.charts.forEach((c) => c.inst.resize())); }
-  if (v === "agency" || v === "bnb") {
-    allBlocks().forEach((bl) => bl.charts.forEach((c) => c.inst.resize()));
-    const list = v === "agency" ? blocks : bnbBlocks;
-    if (list.length) { if (fly.hidden) openFly(b, list); else closeFly(); } else closeFly();
-  } else closeFly();
-}));
+  if (v === "euro") ensureEuro();
+  allBlocks().forEach((bl) => bl.charts.forEach((c) => c.inst.resize()));
+}
+function showFly(btn) {
+  const v = btn.dataset.view, list = listFor(v); if (!list.length) { closeFly(); return; }
+  flyClear(); clearTimeout(tHide);
+  if (flyView !== v || fly.hidden) {
+    fly.innerHTML = "";
+    list.forEach((bl) => {
+      const x = document.createElement("button"); x.type = "button"; x.setAttribute("role", "menuitem"); x.tabIndex = -1; x.textContent = T[bl.p + ".title"];
+      x.onclick = (e) => { e.stopPropagation(); closeFly(); const go = () => bl.root.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); if ($("v-" + v).hidden) { goView(v); setTimeout(go, 80); } else go(); };
+      fly.append(x);
+    });
+    flyView = v;
+  }
+  const r = btn.getBoundingClientRect(), mob = matchMedia("(max-width: 760px)").matches;
+  fly.classList.toggle("below", mob);
+  fly.style.left = (mob ? Math.max(8, r.left) : r.right + 6) + "px"; fly.style.top = (mob ? r.bottom + 6 : r.top) + "px";
+  const wasHidden = fly.hidden; fly.hidden = false;
+  if (wasHidden) requestAnimationFrame(() => fly.classList.add("show")); else fly.classList.add("show");
+  flyNavs.forEach((n) => n.setAttribute("aria-expanded", String(n === btn))); markActive();
+}
+flyNavs.forEach((b) => {
+  b.setAttribute("aria-haspopup", "menu"); b.setAttribute("aria-expanded", "false");
+  b.addEventListener("pointerenter", (e) => {
+    if (e.pointerType !== "mouse") return; if (b.dataset.view === "bnb") ensureBnb(); flyClear();
+    if (!fly.hidden && flyView) showFly(b); else tOpen = setTimeout(() => showFly(b), 120);
+  });
+  b.addEventListener("pointerleave", (e) => { if (e.pointerType !== "mouse") return; clearTimeout(tOpen); tClose = setTimeout(closeFly, 250); });
+  b.addEventListener("keydown", (e) => { if (e.key === "ArrowDown") { e.preventDefault(); showFly(b); fly.firstElementChild && fly.firstElementChild.focus(); } });
+});
+fly.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") clearTimeout(tClose); });
+fly.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") tClose = setTimeout(closeFly, 250); });
+fly.addEventListener("keydown", (e) => {
+  const it = [...fly.children], i = it.indexOf(document.activeElement);
+  if (e.key === "ArrowDown") { e.preventDefault(); it[(i + 1) % it.length].focus(); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); it[(i - 1 + it.length) % it.length].focus(); }
+  else if (e.key === "Home") { e.preventDefault(); it[0].focus(); }
+  else if (e.key === "End") { e.preventDefault(); it[it.length - 1].focus(); }
+  else if (e.key === "Escape") { const n = flyNavs.find((x) => x.dataset.view === flyView); closeFly(); n && n.focus(); }
+  else if (e.key === "Tab") closeFly();
+});
+fly.addEventListener("focusout", (e) => { if (e.relatedTarget && !fly.contains(e.relatedTarget) && !flyNavs.includes(e.relatedTarget)) closeFly(); });
+document.querySelectorAll(".nav").forEach((b) => {
+  b.addEventListener("pointerdown", (e) => { lastPtr = e.pointerType; });
+  b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") lastPtr = "key"; });
+  b.onclick = () => {
+    const v = b.dataset.view; goView(v);
+    if (v === "agency" || v === "bnb") { if (lastPtr === "touch" && flyView === v && !fly.hidden) closeFly(); else showFly(b); }
+    else closeFly();
+  };
+});
 document.addEventListener("click", (e) => { if (!e.target.closest("#fly, .nav[data-view=agency], .nav[data-view=bnb]")) closeFly(); });
+window.addEventListener("scroll", () => { if (!fly.hidden) requestAnimationFrame(markActive); }, { passive: true });
 window.addEventListener("resize", closeFly);
 const renderAll = () => { euroBlocks.forEach((b) => b.root && b.renderTab()); blocks.forEach((b) => b.charts.length && b.render()); bnbBlocks.forEach((b) => b.charts.length && b.render()); };
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { renderAll(); if (TEXTS) paintShell(); });
