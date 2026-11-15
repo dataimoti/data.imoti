@@ -260,6 +260,12 @@ sup.pf { font-size: 8px; color: var(--muted); margin-left: 1px; }
   .esearch { width: 120px; }
 }
 
+
+.ebody { position: relative; }
+.ezoomb { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 4px; }
+.ezoomb button { width: 30px; height: 30px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; font: 600 16px/1 var(--font-ui); cursor: pointer; }
+.ezoomb button:hover { background: var(--chip); }
+.emap { user-select: none; -webkit-user-select: none; }
 </style>
 <script>try{var __t=localStorage.getItem("theme");if(__t==="dark"||__t==="light")document.documentElement.setAttribute("data-theme",__t)}catch(e){}</script>
 
@@ -1133,7 +1139,7 @@ const EU_PAL = ["#cc650f", "#2f8f6b", "#9b59b6", "#d4a017", "#d6336c", "#0e8fa8"
 const EU_MAPPAL = ["#fbe6c6", "#f0c27e", "#e8a43b", "#d9822b", "#c0571c", "#8f3a0f"];
 const EU_SMALL = { BE: 1, NL: 1, SI: 1, HR: 1, AT: 1, SK: 1, LT: 1, LV: 1, EE: 1, CH: 1, DK: 1 };
 const EU_TABS = ["map", "chart", "bar"];
-const EU_METRICS = { map: ["ann", "chg", "idx"], bar: ["ann", "chg", "idx"], chart: ["ann", "idx"] };
+const EU_METRICS = { map: ["chg", "idx"], bar: ["chg", "idx"], chart: ["ann", "idx"] };
 let ED = null, EG = null, euroBlocks = [], euroState = "idle";
 const qlab = (p) => p.slice(0, 4) + "-Q" + (Math.floor((+p.slice(5, 7) - 1) / 3) + 1);
 const escH = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -1369,14 +1375,14 @@ class EuroBlock {
   renderBar(body) {
     const S = this.S, m = this.metric, rows = this.shown().map((g) => ({ g, v: this.val(g) })).filter((x) => x.v != null);
     if (S.sort === "val") rows.sort((a, b) => b.v - a.v); else rows.sort((a, b) => this.gname(a.g).localeCompare(this.gname(b.g), LANG === "en" ? "en" : "bg"));
-    const h = Math.max(220, rows.length * 22 + 50), inst = this.mkChart(body, h), ink = css("--ink"), muted = css("--muted"), mono = css("--font-num"), ui = css("--font-ui");
+    const h = Math.max(220, rows.length * 15 + 40), inst = this.mkChart(body, h), ink = css("--ink"), muted = css("--muted"), mono = css("--font-num"), ui = css("--font-ui");
     inst.setOption({
       animation: false, textStyle: { fontFamily: ui },
       grid: { left: 104, right: 72, top: 22, bottom: 6 },
       tooltip: { trigger: "item", backgroundColor: css("--surface"), borderColor: css("--line"), borderWidth: 1, textStyle: { color: ink, fontFamily: ui, fontSize: 12 }, formatter: (p) => escH(p.name) + ' <b style="font-family:' + mono + '">' + this.fmtV(m, p.value) + "</b>" },
       xAxis: { type: "value", position: "top", axisLabel: { color: muted, fontSize: 9, fontFamily: mono, formatter: (v) => this.axFmt(v) }, splitLine: { lineStyle: { color: css("--line2"), type: "dashed" } } },
-      yAxis: { type: "category", inverse: true, data: rows.map((x) => this.gname(x.g)), axisTick: { show: false }, axisLine: { lineStyle: { color: css("--line") } }, axisLabel: { color: ink, fontSize: 10.5, interval: 0, formatter: (v) => (v === this.gname("BG") || v === this.gname("EU27_2020") ? "{b|" + v + "}" : v), rich: { b: { fontWeight: 700, fontSize: 10.5, color: ink } } } },
-      series: [{ type: "bar", barMaxWidth: 14, data: rows.map((x) => ({ value: x.v, itemStyle: { color: x.g === "BG" ? css("--s1") : x.g === "EU27_2020" ? ink : css("--dash"), borderRadius: 2 } })), label: { show: S.lab, position: "right", fontSize: 10, fontFamily: mono, color: css("--ink2"), formatter: (p) => this.fmtV(m, p.value) } }]
+      yAxis: { type: "category", inverse: true, data: rows.map((x) => this.gname(x.g)), axisTick: { show: false }, axisLine: { lineStyle: { color: css("--line") } }, axisLabel: { color: ink, fontSize: 9.5, interval: 0, formatter: (v) => (v === this.gname("BG") || v === this.gname("EU27_2020") ? "{b|" + v + "}" : v), rich: { b: { fontWeight: 700, fontSize: 9.5, color: ink } } } },
+      series: [{ type: "bar", barMaxWidth: 11, data: rows.map((x) => ({ value: x.v, itemStyle: { color: x.g === "BG" ? css("--s1") : x.g === "EU27_2020" ? ink : css("--dash"), borderRadius: 2 } })), label: { show: S.lab, position: "right", fontSize: 9, fontFamily: mono, color: css("--ink2"), formatter: (p) => this.fmtV(m, p.value) } }]
     });
   }
 
@@ -1420,6 +1426,27 @@ class EuroBlock {
     };
     svgEl.addEventListener("pointermove", (e) => { const g = e.target.dataset && e.target.dataset.g; g ? show(g, e.clientX, e.clientY) : (tip.hidden = true); });
     svgEl.addEventListener("pointerleave", () => (tip.hidden = true));
+
+    /* зум и местене */
+    const HOME = { x: 0, y: 150, w: W, h: 480 }, v0 = () => ({ ...HOME }); let v = S.view || v0(), pts = new Map(), moved = false, last = null;
+    const apply = () => { svgEl.setAttribute("viewBox", v.x + " " + v.y + " " + v.w + " " + v.h); S.view = v; const z = Math.abs(v.w - HOME.w) > 0.5 || Math.abs(v.x - HOME.x) > 0.5 || Math.abs(v.y - HOME.y) > 0.5; svgEl.style.touchAction = z ? "none" : "pan-y"; svgEl.style.cursor = "grab"; };
+    const zoomAt = (f, cx, cy) => { const nw = Math.min(W, Math.max(W / 8, v.w / f)), k = nw / v.w, nh = nw * HOME.h / HOME.w; v = { w: nw, h: nh, x: Math.min(W - nw, Math.max(0, cx - (cx - v.x) * k)), y: Math.min(H - nh, Math.max(0, cy - (cy - v.y) * k)) }; apply(); };
+    const toSvg = (px, py) => { const b = svgEl.getBoundingClientRect(); return [v.x + (px - b.left) / b.width * v.w, v.y + (py - b.top) / b.height * v.h]; };
+    const zb = document.createElement("div"); zb.className = "ezoomb";
+    [["+", "eu.zoomIn", () => zoomAt(1.6, v.x + v.w / 2, v.y + v.h / 2)], ["\u2212", "eu.zoomOut", () => zoomAt(1 / 1.6, v.x + v.w / 2, v.y + v.h / 2)], ["\u27f2", "eu.zoomReset", () => { v = v0(); apply(); }]].forEach(([t, k, fn]) => { const b = document.createElement("button"); b.type = "button"; b.textContent = t; b.title = T[k]; b.setAttribute("aria-label", T[k]); b.onclick = fn; zb.append(b); });
+    body.append(zb); apply();
+    svgEl.addEventListener("wheel", (e) => { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); const [cx, cy] = toSvg(e.clientX, e.clientY); zoomAt(e.deltaY < 0 ? 1.25 : 0.8, cx, cy); }, { passive: false });
+    svgEl.addEventListener("pointerdown", (e) => { pts.set(e.pointerId, [e.clientX, e.clientY]); moved = false; last = null; });
+    svgEl.addEventListener("pointermove", (e) => {
+      if (!pts.has(e.pointerId)) return; const old = pts.get(e.pointerId), b = svgEl.getBoundingClientRect();
+      if (pts.size === 2) { const o = [...pts.values()], d0 = Math.hypot(o[0][0] - o[1][0], o[0][1] - o[1][1]); pts.set(e.pointerId, [e.clientX, e.clientY]); const n = [...pts.values()], d1 = Math.hypot(n[0][0] - n[1][0], n[0][1] - n[1][1]); if (d0 > 0) { const [cx, cy] = toSvg((n[0][0] + n[1][0]) / 2, (n[0][1] + n[1][1]) / 2); zoomAt(d1 / d0, cx, cy); } moved = true; tip.hidden = true; return; }
+      const dx = e.clientX - old[0], dy = e.clientY - old[1];
+      if (!moved && Math.hypot(dx, dy) < 3) return; if (!moved) { moved = true; try { svgEl.setPointerCapture(e.pointerId); } catch (x) {} svgEl.style.cursor = "grabbing"; }
+      pts.set(e.pointerId, [e.clientX, e.clientY]); tip.hidden = true;
+      v = { w: v.w, h: v.h, x: Math.min(W - v.w, Math.max(0, v.x - dx * v.w / b.width)), y: Math.min(H - v.h, Math.max(0, v.y - dy * v.h / b.height)) }; apply(); svgEl.style.cursor = "grabbing";
+    });
+    const up = (e) => { pts.delete(e.pointerId); if (!pts.size) { moved = false; apply(); } };
+    svgEl.addEventListener("pointerup", up); svgEl.addEventListener("pointercancel", up);
     svgEl.addEventListener("focusin", (e) => { const g = e.target.dataset && e.target.dataset.g; if (g) { const r = e.target.getBoundingClientRect(); show(g, r.left + r.width / 2, r.top + r.height / 2); } });
     svgEl.addEventListener("focusout", () => (tip.hidden = true));
   }
@@ -1430,7 +1457,7 @@ class EuroBlock {
     if (this.charts[0]) { const url = this.charts[0].inst.getDataURL({ type: "png", pixelRatio: 2, backgroundColor: css("--surface") }), bin = atob(url.split(",")[1]), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type: "image/png" }); }
     const svgEl = this.r("body").querySelector("svg"), s = new XMLSerializer().serializeToString(svgEl).replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
     const img = new Image(); await new Promise((ok, no) => { img.onload = ok; img.onerror = no; img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(s); });
-    const cv = document.createElement("canvas"); cv.width = EG.W * 2; cv.height = EG.H * 2; const c = cv.getContext("2d"); c.fillStyle = css("--surface"); c.fillRect(0, 0, cv.width, cv.height); c.drawImage(img, 0, 0, cv.width, cv.height);
+    const cv = document.createElement("canvas"); const vb = svgEl.viewBox.baseVal; cv.width = 1520; cv.height = Math.round(1520 * vb.height / vb.width); const c = cv.getContext("2d"); c.fillStyle = css("--surface"); c.fillRect(0, 0, cv.width, cv.height); c.drawImage(img, 0, 0, cv.width, cv.height);
     return await new Promise((ok) => cv.toBlob(ok, "image/png"));
   }
   async doDownload(kind) {

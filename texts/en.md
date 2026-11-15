@@ -695,3 +695,6 @@ eu.geo.TR: Türkiye
 eu.geo.UK: United Kingdom
 eu.geo.EU27_2020: EU-27
 eu.geo.EA21: Euro area
+eu.zoomIn: Zoom in
+eu.zoomOut: Zoom out
+eu.zoomReset: Reset view

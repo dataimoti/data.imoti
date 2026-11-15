@@ -695,3 +695,6 @@ eu.geo.TR: Турция
 eu.geo.UK: Обединено кралство
 eu.geo.EU27_2020: ЕС-27
 eu.geo.EA21: Еврозона
+eu.zoomIn: Увеличи
+eu.zoomOut: Намали
+eu.zoomReset: Начален изглед
