@@ -1624,7 +1624,7 @@ document.addEventListener("click", (e) => { closeMenus(); allBlocks().forEach((b
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { allBlocks().forEach((b) => b.togglePop(false)); closeMenus(); closeFly(); } });
 /* ---- подменю на страничната лента: отваря се при посочване, затваря се при отдалечаване ---- */
 const fly = $("fly"), flyNavs = [...document.querySelectorAll(".nav[data-view=agency], .nav[data-view=bnb]")];
-let flyView = null, tOpen = 0, tClose = 0, tHide = 0, lastPtr = "mouse";
+let flyView = null, tOpen = 0, tClose = 0, tHide = 0, tTouch = 0, flyTouch = false, flyAt = 0, lastPtr = "mouse";
 const listFor = (v) => (v === "agency" ? blocks : bnbBlocks);
 const flyClear = () => { clearTimeout(tOpen); clearTimeout(tClose); };
 function markActive() {
@@ -1634,7 +1634,7 @@ function markActive() {
   [...fly.children].forEach((x, i) => (i === cur ? x.setAttribute("aria-current", "true") : x.removeAttribute("aria-current")));
 }
 function closeFly() {
-  flyClear(); clearTimeout(tHide); if (fly.hidden) return;
+  flyClear(); clearTimeout(tHide); clearTimeout(tTouch); flyTouch = false; if (fly.hidden) return;
   fly.classList.remove("show"); flyNavs.forEach((n) => n.setAttribute("aria-expanded", "false")); flyView = null;
   tHide = setTimeout(() => { fly.hidden = true; }, reduce ? 0 : 150);
 }
@@ -1663,6 +1663,8 @@ function showFly(btn) {
   const wasHidden = fly.hidden; fly.hidden = false;
   if (wasHidden) requestAnimationFrame(() => fly.classList.add("show")); else fly.classList.add("show");
   flyNavs.forEach((n) => n.setAttribute("aria-expanded", String(n === btn))); markActive();
+  clearTimeout(tTouch); flyTouch = lastPtr === "touch"; flyAt = Date.now();
+  if (flyTouch) tTouch = setTimeout(closeFly, 5000);
 }
 flyNavs.forEach((b) => {
   b.setAttribute("aria-haspopup", "menu"); b.setAttribute("aria-expanded", "false");
@@ -1673,6 +1675,7 @@ flyNavs.forEach((b) => {
   b.addEventListener("pointerleave", (e) => { if (e.pointerType !== "mouse") return; clearTimeout(tOpen); tClose = setTimeout(closeFly, 250); });
   b.addEventListener("keydown", (e) => { if (e.key === "ArrowDown") { e.preventDefault(); showFly(b); fly.firstElementChild && fly.firstElementChild.focus(); } });
 });
+fly.addEventListener("pointerdown", (e) => { if (flyTouch) { clearTimeout(tTouch); tTouch = setTimeout(closeFly, 5000); } });
 fly.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") clearTimeout(tClose); });
 fly.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") tClose = setTimeout(closeFly, 250); });
 fly.addEventListener("keydown", (e) => {
@@ -1695,7 +1698,7 @@ document.querySelectorAll(".nav").forEach((b) => {
   };
 });
 document.addEventListener("click", (e) => { if (!e.target.closest("#fly, .nav[data-view=agency], .nav[data-view=bnb]")) closeFly(); });
-window.addEventListener("scroll", () => { if (!fly.hidden) requestAnimationFrame(markActive); }, { passive: true });
+window.addEventListener("scroll", () => { if (fly.hidden) return; if (flyTouch && Date.now() - flyAt > 400) closeFly(); else requestAnimationFrame(markActive); }, { passive: true });
 window.addEventListener("resize", closeFly);
 const renderAll = () => { euroBlocks.forEach((b) => b.root && b.renderTab()); blocks.forEach((b) => b.charts.length && b.render()); bnbBlocks.forEach((b) => b.charts.length && b.render()); };
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { renderAll(); if (TEXTS) paintShell(); });
